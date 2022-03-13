@@ -36,7 +36,7 @@ class SongExtractor:
     list
         a list of lists of onset, offset and progressive id
     """
-    with open(self.offset_file, newline = '') as f:                                                                                          
+    with open(self.offset_file, newline = '') as f:
       file_reader = csv.reader(f, delimiter=separator)
       return [l for l in file_reader]
 
