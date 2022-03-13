@@ -11,31 +11,39 @@ class soundEffects:
 
         return librosa.effects.harmonic(signal)
 
-    def apply_mu_compression(signal, quantize):
+    def apply_mu_compression(signal, mu, quantize):
 
-        return librosa.mu_compress(signal, quantize)
+        return librosa.mu_compress(signal, mu=mu, quantize=quantize)
+
+    def trim(signal):
+
+        trimmed_signal, index = librosa.effects.trim(signal, top_db=50)
+        return trimmed_signal
 
 class soundEncoding:
 
-    def __init__(path, sampling_rate=None, mu_compression=False, harmonic=False, window_length=512, transform_method="Fourier"):
+    def __init__(self, path, sampling_rate=None, trim=True, mu_compression=False, harmonic=False, window_length=512, transform_method="Fourier"):
 
         if transform_method!="Fourier" and transform_method!="Constant-Q":
-            raise Exception("Transform method must be one betwee 'Fourier' and 'Constant-Q'")
+            raise Exception("Transform method must be one between 'Fourier' and 'Constant-Q'")
 
         else:
             self.window_length = window_length
             self.transform_method = transform_method
-            _initialize_encodings()
+            self._initialize_encodings()
 
-            _open(path, sampling_rate)
+            self._open(path, sampling_rate)
+
+            if trim:
+                self.raw_signal = soundEffects.trim(self.raw_signal)
 
             if harmonic:
                 self.raw_signal = soundEffects.extract_harmony(self.raw_signal)
 
             if mu_compression:
-                self.raw_signal = soundEffects.apply_mu_compression(self.raw_signal, quantize=False)
+                self.raw_signal = soundEffects.apply_mu_compression(self.raw_signal, mu=256, quantize=False)
 
-    def _open(path, sampling_rate):
+    def _open(self, path, sampling_rate):
 
         raw_input, sr = librosa.load(path, sr=sampling_rate)
 
@@ -43,7 +51,7 @@ class soundEncoding:
         self.raw_signal = raw_input
         self.sampling_rate = sr
 
-    def _initialize_encodings():
+    def _initialize_encodings(self):
 
         self.spectrogram = None
         self.chromagram = None
@@ -51,7 +59,11 @@ class soundEncoding:
         self.mel_spectrogram = None
         self.mfcc = None
 
-    def get_spectrogram():
+    def get_raw_waveform(self):
+
+        return self.raw_signal
+
+    def get_spectrogram(self):
 
         if self.spectrogram==None:
             if self.transform_method=="Fourier":
@@ -61,7 +73,7 @@ class soundEncoding:
 
         return self.spectrogram
 
-    def get_chromagram():
+    def get_chromagram(self):
 
         if self.chromagram==None:
             if self.transform_method=="Fourier":
@@ -71,21 +83,21 @@ class soundEncoding:
 
         return self.chromagram
 
-    def get_normalized_chromagram():
+    def get_normalized_chromagram(self):
 
         if self.cens_chromagram==None:
             self.cens_chromagram = librosa.feature.chroma_cens(y=self.raw_signal, sr=self.sampling_rate, hop_length=self.window_length)
 
         return self.cens_chromagram
 
-    def get_mel_spectrogram():
+    def get_mel_spectrogram(self):
 
         if self.mel_spectrogram==None:
             self.mel_spectrogram = librosa.feature.melspectrogram(y=self.raw_signal, sr=self.sampling_rate, hop_length=self.window_length)
 
         return self.mel_spectrogram
 
-    def get_mfcc():
+    def get_mfcc(self):
 
         if self.mfcc==None:
             self.mfcc = librosa.feature.mfcc(y=self.raw_signal, sr=self.sampling_rate)
