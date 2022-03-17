@@ -8,6 +8,7 @@
 
 .idea
 __pycache__/
+data/
 
 # User-specific stuff
 .idea/**/workspace.xml

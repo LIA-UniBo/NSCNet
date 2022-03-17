@@ -1,9 +1,11 @@
-from song_extractor import SongExtractor
 import os
 import os.path as osp
 from argparse import ArgumentParser
 from pathlib import Path
 import warnings
+
+from utils.extractor.song_extractor import SongExtractor
+
 warnings.filterwarnings("ignore")
 
 parser = ArgumentParser()
