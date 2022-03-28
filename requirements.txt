@@ -6,3 +6,4 @@ tqdm
 matplotlib
 pydub
 librosa
+sklearn
