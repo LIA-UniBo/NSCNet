@@ -5,12 +5,11 @@ import tensorflow as tf
 
 import matrix_manipulation
 import clustering
+import spec_augmentation
 
 class Generator(tf.keras.utils.Sequence):
 
-    def __init__(self, x, batch_size, conv_net_model, features_extraction_options, cluster_method, cluster_args, verbose=True):
-
-        #TODO: consider shuffle here or before call
+    def __init__(self, x, batch_size, conv_net_model, features_extraction_options, spec_augmentation_options, cluster_method, cluster_args, shuffle=True, verbose=True):
 
         if cluster_method not in clustering.CLUSTERING_METHODS:
             raise Exception("cluster method must be one between " + ",".join(clustering.CLUSTERING_METHODS))
@@ -19,9 +18,13 @@ class Generator(tf.keras.utils.Sequence):
         self.batch_size = batch_size
         self.feature_extractor = conv_net_model
         self.features_extraction_options = features_extraction_options
+        self.spec_augmentation_options = spec_augmentation_options
         self.cluster_method = cluster_method
         self.cluster_args = cluster_args
         self.verbose = verbose
+
+        if shuffle:
+            np.random.shuffle(self.x)
 
         self.y = self.generate_pseudo_labels()
 
@@ -31,10 +34,13 @@ class Generator(tf.keras.utils.Sequence):
 
     def __getitem__(self, idx):
 
-        #TODO: add Spec augmentation here
-
         batch_x = self.x[idx * self.batch_size:(idx + 1) * self.batch_size]
         batch_y = self.y[idx * self.batch_size:(idx + 1) * self.batch_size]
+
+        if self.spec_augmentation_options["apply"] is True:
+            policy = self.spec_augmentation_options["policy"]
+            augment_batch_func = lambda x: spec_augmentation.augment(x, **policy)
+            batch_x = list(map(augment_batch_func, batch_x))
 
         return np.array(batch_x), np.array(batch_y)
 

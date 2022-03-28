@@ -1,4 +1,5 @@
 tensorflow==2.7.0
+tensorflow_addons
 numpy
 pandas
 pydot

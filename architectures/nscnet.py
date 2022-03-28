@@ -4,6 +4,7 @@ from tensorflow.keras import layers
 
 from pseudo_labels_generator import Generator
 from images_loader import import_image_np_dataset
+import spec_augmentation
 
 POST_PROCESSING_OPTIONS = {
 "normalize": True,
@@ -11,13 +12,19 @@ POST_PROCESSING_OPTIONS = {
 "whiten": True,
 "l2 normalize": True
 }
+
 RGB_NORMALIZATION = True
+
+SPEC_AUGMENTATION_OPTIONS = {
+"apply": True,
+"policy": spec_augmentation.POLICIES["LB"]
+}
 
 IMAGES_PATH = "Samples"
 
 POOLING = "max"
 DIM_REPRESENTATION = 512
-INPUT_SHAPE = (640,480,3)
+INPUT_SHAPE = (480,640,3)
 N_CLUSTERS = 20 #Test value
 CLUSTERING_METHOD = "kmeans"
 
@@ -76,7 +83,7 @@ def build_model(input_shape, pooling, linear_units, n_clusters, optimizer, loss_
 
     return model
 
-def train_model(model, inputs, batch_size, epochs, callbacks, post_processing_options, cluster_method, cluster_args):
+def train_model(model, inputs, batch_size, epochs, callbacks, post_processing_options, spec_augmentation_options, cluster_method, cluster_args):
 
     #TODO: add early stopping for NMI
 
@@ -84,6 +91,7 @@ def train_model(model, inputs, batch_size, epochs, callbacks, post_processing_op
                         batch_size,
                         model.conv_net,
                         post_processing_options,
+                        spec_augmentation_options,
                         cluster_method,
                         cluster_args)
 
@@ -103,4 +111,4 @@ cluster_args = {
 
 model = build_model(INPUT_SHAPE, POOLING, DIM_REPRESENTATION, N_CLUSTERS, OPTIMIZER, LOSS)
 model.summary()
-train_model(model, inputs, BATCH_SIZE, EPOCHS, [], POST_PROCESSING_OPTIONS, CLUSTERING_METHOD, cluster_args)
+train_model(model, inputs, BATCH_SIZE, EPOCHS, [], POST_PROCESSING_OPTIONS, SPEC_AUGMENTATION_OPTIONS ,CLUSTERING_METHOD, cluster_args)
