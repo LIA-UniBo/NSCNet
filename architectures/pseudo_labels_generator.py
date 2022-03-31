@@ -6,10 +6,11 @@ import tensorflow as tf
 import matrix_manipulation
 import clustering
 import spec_augmentation
+from uniform_cluster_sampler import ClusterSampler
 
 class Generator(tf.keras.utils.Sequence):
 
-    def __init__(self, x, batch_size, conv_net_model, features_extraction_options, spec_augmentation_options, cluster_method, cluster_args, shuffle=True, verbose=True):
+    def __init__(self, x, batch_size, conv_net_model, features_extraction_options, spec_augmentation_options, cluster_method, cluster_args, shuffle=True, verbose=True, custom_sampler=True):
 
         if cluster_method not in clustering.CLUSTERING_METHODS:
             raise Exception("cluster method must be one between " + ",".join(clustering.CLUSTERING_METHODS))
@@ -22,11 +23,16 @@ class Generator(tf.keras.utils.Sequence):
         self.cluster_method = cluster_method
         self.cluster_args = cluster_args
         self.verbose = verbose
+        self.custom_sampler = custom_sampler
 
         if shuffle:
             np.random.shuffle(self.x)
 
         self.y = self.generate_pseudo_labels()
+
+        if self.custom_sampler:
+            self.sampler = ClusterSampler(cluster_args["n_clusters"], batch_size)
+            self.sampler.segment_clusters(self.y)
 
     def __len__(self):
 
@@ -34,8 +40,12 @@ class Generator(tf.keras.utils.Sequence):
 
     def __getitem__(self, idx):
 
-        batch_x = self.x[idx * self.batch_size:(idx + 1) * self.batch_size]
-        batch_y = self.y[idx * self.batch_size:(idx + 1) * self.batch_size]
+        if self.custom_sampler:
+            batch_x, batch_y = self.sampler.sample(self.x, self.y)
+
+        else:
+            batch_x = self.x[idx * self.batch_size:(idx + 1) * self.batch_size]
+            batch_y = self.y[idx * self.batch_size:(idx + 1) * self.batch_size]
 
         if self.spec_augmentation_options["apply"] is True:
             policy = self.spec_augmentation_options["policy"]
@@ -46,9 +56,10 @@ class Generator(tf.keras.utils.Sequence):
 
     def on_epoch_end(self):
 
-        #TODO: add new shuffle with uniform cluster distribution
-
         self.y = self.generate_pseudo_labels()
+
+        if self.custom_sampler:
+            self.sampler.segment_clusters(self.y)
 
     def generate_pseudo_labels(self):
 
