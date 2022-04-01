@@ -2,6 +2,7 @@ import numpy as np
 import math
 import time
 import tensorflow as tf
+from sklearn.metrics.cluster import normalized_mutual_info_score as nmi
 
 import matrix_manipulation
 import clustering
@@ -10,7 +11,7 @@ from uniform_cluster_sampler import ClusterSampler
 
 class Generator(tf.keras.utils.Sequence):
 
-    def __init__(self, x, batch_size, conv_net_model, features_extraction_options, spec_augmentation_options, cluster_method, cluster_args, shuffle=True, verbose=True, custom_sampler=True):
+    def __init__(self, x, batch_size, conv_net_model, features_extraction_options, spec_augmentation_options, early_stopping_options, cluster_method, cluster_args, shuffle=True, verbose=True, custom_sampler=True):
 
         if cluster_method not in clustering.CLUSTERING_METHODS:
             raise Exception("cluster method must be one between " + ",".join(clustering.CLUSTERING_METHODS))
@@ -20,6 +21,7 @@ class Generator(tf.keras.utils.Sequence):
         self.feature_extractor = conv_net_model
         self.features_extraction_options = features_extraction_options
         self.spec_augmentation_options = spec_augmentation_options
+        self.early_stopping_options = early_stopping_options
         self.cluster_method = cluster_method
         self.cluster_args = cluster_args
         self.verbose = verbose
@@ -29,6 +31,7 @@ class Generator(tf.keras.utils.Sequence):
             np.random.shuffle(self.x)
 
         self.y = self.generate_pseudo_labels()
+        self.nmi_scores = []
 
         if self.custom_sampler:
             self.sampler = ClusterSampler(cluster_args["n_clusters"], batch_size)
@@ -56,7 +59,10 @@ class Generator(tf.keras.utils.Sequence):
 
     def on_epoch_end(self):
 
+        old_y = np.copy(self.y)
         self.y = self.generate_pseudo_labels()
+
+        self.update_metrics(old_y, self.y)
 
         if self.custom_sampler:
             self.sampler.segment_clusters(self.y)
@@ -98,3 +104,26 @@ class Generator(tf.keras.utils.Sequence):
             features = matrix_manipulation.l2_normalize(features)
 
         return features
+
+    def update_metrics(self, old_y, new_y):
+
+        nmi_score = nmi(old_y, new_y)
+        self.nmi_scores.append(nmi_score)
+        if self.verbose:
+            print("NMI score: {}".format(nmi_score))
+
+        if self.early_stopping_options["apply"]:
+            self.check_early_stopping()
+
+    def check_early_stopping(self):
+
+        min_delta = self.early_stopping_options["min_delta"]
+        patience = self.early_stopping_options["patience"]+1
+
+        if len(self.nmi_scores)>=patience:
+            last_scores = self.nmi_scores[-patience:]
+            delta_scores = -np.diff(last_scores)
+            no_improvemements = np.all(delta_scores<min_delta)
+
+            if no_improvemements:
+                self.feature_extractor.force_stop=True

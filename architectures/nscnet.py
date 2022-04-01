@@ -20,18 +20,24 @@ SPEC_AUGMENTATION_OPTIONS = {
 "policy": spec_augmentation.POLICIES["LB"]
 }
 
+EARLY_STOPPING_OPTIONS = {
+"apply": True,
+"min_delta": 0.005,
+"patience": 1
+}
+
 IMAGES_PATH = "Samples"
 
 POOLING = "max"
 DIM_REPRESENTATION = 512
-INPUT_SHAPE = (480,640,3)
+INPUT_SHAPE = (240,320,3)
 N_CLUSTERS = 20 #Test value
 CLUSTERING_METHOD = "kmeans"
 
 LEARNING_RATE = 1e-3
 OPTIMIZER = tf.keras.optimizers.Adam(LEARNING_RATE, beta_1=0.8, beta_2=0.999, epsilon=1e-7)
 LOSS = tf.keras.losses.SparseCategoricalCrossentropy()
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 EPOCHS = 50
 
 class ConvNet(tf.keras.Model):
@@ -46,6 +52,8 @@ class ConvNet(tf.keras.Model):
                                                                 pooling=pooling)
 
         self.linear_layer = layers.Dense(linear_units, activation="relu")
+
+        self.force_stop = False
 
     def call(self, x):
 
@@ -70,6 +78,12 @@ class Classifier(tf.keras.Model):
 
         return x
 
+class CustomEarlyStop(tf.keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        if self.model.conv_net.force_stop:
+            print("\nEarly stopping...")
+            self.model.stop_training = True
+
 def build_model(input_shape, pooling, linear_units, n_clusters, optimizer, loss_function):
 
     input = tf.keras.Input(shape=input_shape)
@@ -78,20 +92,18 @@ def build_model(input_shape, pooling, linear_units, n_clusters, optimizer, loss_
 
     model = Classifier(conv_net, n_clusters)
     model(input)
-    #TODO: add metrics (NMI? Inertia?)
     model.compile(optimizer=optimizer, loss=loss_function)
 
     return model
 
-def train_model(model, inputs, batch_size, epochs, callbacks, post_processing_options, spec_augmentation_options, cluster_method, cluster_args):
-
-    #TODO: add early stopping for NMI
+def train_model(model, inputs, batch_size, epochs, callbacks, post_processing_options, spec_augmentation_options, early_stopping_options, cluster_method, cluster_args):
 
     generator = Generator(inputs,
                         batch_size,
                         model.conv_net,
                         post_processing_options,
                         spec_augmentation_options,
+                        early_stopping_options,
                         cluster_method,
                         cluster_args)
 
@@ -111,4 +123,4 @@ cluster_args = {
 
 model = build_model(INPUT_SHAPE, POOLING, DIM_REPRESENTATION, N_CLUSTERS, OPTIMIZER, LOSS)
 model.summary()
-train_model(model, inputs, BATCH_SIZE, EPOCHS, [], POST_PROCESSING_OPTIONS, SPEC_AUGMENTATION_OPTIONS ,CLUSTERING_METHOD, cluster_args)
+train_model(model, inputs, BATCH_SIZE, EPOCHS, [CustomEarlyStop()], POST_PROCESSING_OPTIONS, SPEC_AUGMENTATION_OPTIONS, EARLY_STOPPING_OPTIONS ,CLUSTERING_METHOD, cluster_args)
