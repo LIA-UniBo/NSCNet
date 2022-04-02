@@ -7,31 +7,31 @@ from images_loader import import_image_np_dataset
 import spec_augmentation
 
 POST_PROCESSING_OPTIONS = {
-"normalize": True,
-"pca": 128,
-"whiten": True,
-"l2 normalize": True
+    "normalize": True,
+    "pca": 128,
+    "whiten": True,
+    "l2 normalize": True
 }
 
 RGB_NORMALIZATION = True
 
 SPEC_AUGMENTATION_OPTIONS = {
-"apply": True,
-"policy": spec_augmentation.POLICIES["LB"]
+    "apply": True,
+    "policy": spec_augmentation.POLICIES["LB"]
 }
 
 EARLY_STOPPING_OPTIONS = {
-"apply": True,
-"min_delta": 0.005,
-"patience": 1
+    "apply": True,
+    "min_delta": 0.005,
+    "patience": 1
 }
 
 IMAGES_PATH = "Samples"
 
 POOLING = "max"
 DIM_REPRESENTATION = 512
-INPUT_SHAPE = (240,320,3)
-N_CLUSTERS = 20 #Test value
+INPUT_SHAPE = (240, 320, 3)
+N_CLUSTERS = 20  # Test value
 CLUSTERING_METHOD = "kmeans"
 
 LEARNING_RATE = 1e-3
@@ -40,43 +40,44 @@ LOSS = tf.keras.losses.SparseCategoricalCrossentropy()
 BATCH_SIZE = 16
 EPOCHS = 50
 
+
 class ConvNet(tf.keras.Model):
 
     def __init__(self, input_shape, pooling, linear_units):
-
         super(ConvNet, self).__init__()
 
         self.efficient_net = tf.keras.applications.EfficientNetB0(include_top=False,
-                                                                weights=None,
-                                                                input_shape=input_shape,
-                                                                pooling=pooling)
+                                                                  weights=None,
+                                                                  input_shape=input_shape,
+                                                                  pooling=pooling)
 
         self.linear_layer = layers.Dense(linear_units, activation="relu")
 
         self.force_stop = False
 
     def call(self, x):
-
         x = self.efficient_net(x)
         x = self.linear_layer(x)
 
         return x
 
+
 class Classifier(tf.keras.Model):
 
     def __init__(self, conv_net, n_clusters):
-
         super(Classifier, self).__init__()
 
         self.conv_net = conv_net
+
+        # TODO: work here for the ARCFACE LOSS
         self.classification_head = layers.Dense(n_clusters, activation="softmax")
 
     def call(self, x):
-
         x = self.conv_net(x)
         x = self.classification_head(x)
 
         return x
+
 
 class CustomEarlyStop(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
@@ -84,8 +85,8 @@ class CustomEarlyStop(tf.keras.callbacks.Callback):
             print("\nEarly stopping...")
             self.model.stop_training = True
 
-def build_model(input_shape, pooling, linear_units, n_clusters, optimizer, loss_function):
 
+def build_model(input_shape, pooling, linear_units, n_clusters, optimizer, loss_function):
     input = tf.keras.Input(shape=input_shape)
 
     conv_net = ConvNet(input_shape, pooling, linear_units)
@@ -96,16 +97,17 @@ def build_model(input_shape, pooling, linear_units, n_clusters, optimizer, loss_
 
     return model
 
-def train_model(model, inputs, batch_size, epochs, callbacks, post_processing_options, spec_augmentation_options, early_stopping_options, cluster_method, cluster_args):
 
+def train_model(model, inputs, batch_size, epochs, callbacks, post_processing_options, spec_augmentation_options,
+                early_stopping_options, cluster_method, cluster_args):
     generator = Generator(inputs,
-                        batch_size,
-                        model.conv_net,
-                        post_processing_options,
-                        spec_augmentation_options,
-                        early_stopping_options,
-                        cluster_method,
-                        cluster_args)
+                          batch_size,
+                          model.conv_net,
+                          post_processing_options,
+                          spec_augmentation_options,
+                          early_stopping_options,
+                          cluster_method,
+                          cluster_args)
 
     history = model.fit(x=generator,
                         verbose=1,
@@ -113,14 +115,16 @@ def train_model(model, inputs, batch_size, epochs, callbacks, post_processing_op
                         epochs=epochs,
                         callbacks=callbacks)
 
-#-------------------------------------------------
-#Test
-inputs = import_image_np_dataset(IMAGES_PATH, (INPUT_SHAPE[0],INPUT_SHAPE[1]), RGB_NORMALIZATION)
+
+# -------------------------------------------------
+# Test
+inputs = import_image_np_dataset(IMAGES_PATH, (INPUT_SHAPE[0], INPUT_SHAPE[1]), RGB_NORMALIZATION)
 
 cluster_args = {
-"n_clusters":N_CLUSTERS
+    "n_clusters": N_CLUSTERS
 }
 
 model = build_model(INPUT_SHAPE, POOLING, DIM_REPRESENTATION, N_CLUSTERS, OPTIMIZER, LOSS)
 model.summary()
-train_model(model, inputs, BATCH_SIZE, EPOCHS, [CustomEarlyStop()], POST_PROCESSING_OPTIONS, SPEC_AUGMENTATION_OPTIONS, EARLY_STOPPING_OPTIONS ,CLUSTERING_METHOD, cluster_args)
+train_model(model, inputs, BATCH_SIZE, EPOCHS, [CustomEarlyStop()], POST_PROCESSING_OPTIONS, SPEC_AUGMENTATION_OPTIONS,
+            EARLY_STOPPING_OPTIONS, CLUSTERING_METHOD, cluster_args)

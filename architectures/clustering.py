@@ -23,7 +23,7 @@ def k_means(x, n_clusters, max_iterations=300, batch_size=None):
 
         return {"labels": kmeans.labels_, "inertia": kmeans.inertia_}
 
-def dbscan(x, eps, min_sample, metric="euclidean"):
+def dbscan(x, eps, min_samples, metric="euclidean"):
 
     dbscan_clustering = DBSCAN(eps=eps,
                         min_samples=min_samples,
