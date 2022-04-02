@@ -6,6 +6,8 @@ from pseudo_labels_generator import Generator
 from images_loader import import_image_np_dataset
 import spec_augmentation
 
+from architectures.arcface_layer import ArcFace
+
 POST_PROCESSING_OPTIONS = {
     "normalize": True,
     "pca": 128,
@@ -64,13 +66,15 @@ class ConvNet(tf.keras.Model):
 
 class Classifier(tf.keras.Model):
 
-    def __init__(self, conv_net, n_clusters):
+    def __init__(self, conv_net, n_clusters, use_arcface=False):
         super(Classifier, self).__init__()
 
         self.conv_net = conv_net
 
-        # TODO: work here for the ARCFACE LOSS
-        self.classification_head = layers.Dense(n_clusters, activation="softmax")
+        if use_arcface:
+            self.classification_head = ArcFace(n_clusters)
+        else:
+            self.classification_head = layers.Dense(n_clusters, activation="softmax")
 
     def call(self, x):
         x = self.conv_net(x)
