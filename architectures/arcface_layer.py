@@ -14,30 +14,27 @@ class ArcFace(tf.keras.layers.Layer):
         self.cos_margin = math.cos(margin)
         self.sin_margin = math.sin(margin)
         self.threshold = math.cos(math.pi - margin)
-        self.margin_cosface = math.sin(math.pi - margin) * margin
+        self.margin_cosface = self.sin_margin * margin
 
         self.output_units = output_units
         self.output_regularizer = output_regularizer
 
     def build(self, input_shape):
-
         self.custom_weights = self.add_weight(name='custom_weights',
-                                 shape=(input_shape[-1], self.output_units),
-                                 initializer='glorot_uniform',
-                                 trainable=True,
-                                 regularizer=self.output_regularizer)
-        print()
+                                              shape=(input_shape[-1], self.output_units),
+                                              initializer='glorot_uniform',
+                                              trainable=True,
+                                              regularizer=self.output_regularizer)
 
     def call(self, features, labels):
-
         # features and weights normalization
-        features_norm = tf.norm(features, axis=1, keepdims=True)
-        normalized_features = tf.div(features, features_norm)
+        features_norm = tf.math.reduce_euclidean_norm(features, axis=1, keepdims=True)
+        normalized_features = tf.math.divide(features, features_norm)
 
-        weights_norm = tf.norm(self.custom_weights, axis=0, keepdims=True)
-        normalized_weights = tf.div(self.custom_weights, weights_norm)
+        weights_norm = tf.math.reduce_euclidean_norm(self.custom_weights, axis=0, keepdims=True)
+        normalized_weights = tf.math.divide(self.custom_weights, weights_norm)
 
-        # dot product that returns the so "cos(θ)" in the paper
+        # dot product that returns the so called "cos(θ)" in the paper
         # TODO: move the following comment to the project relation
         """
         The dot product between two vectors can be written as
@@ -54,23 +51,24 @@ class ArcFace(tf.keras.layers.Layer):
         
         x ⋅ y = cos(θ)
         """
-        cos_theta = normalized_features @ normalized_weights
+        cos_theta = tf.tensordot(normalized_features, normalized_weights, axes=1)
 
-        # Compute cos(θ + margin)
+        # Compute scale * cos(θ + margin)
         # TODO: move the following comment to the project relation
         """
         Use the trigonometric function
         sin^2(θ) = 1 - cos^2(θ)
         cos(x1 + x2) = cos(x1) * cos(x2) - sin(x1) * sin(x2) 
         """
-        cos_theta_squared = tf.square(cos_theta)
-        sin_theta_squared = tf.subtract(1.0, cos_theta_squared)
-        sin_theta = tf.sqrt(sin_theta_squared)
+        cos_theta_squared = tf.math.square(cos_theta)
+        sin_theta_squared = tf.math.subtract(1.0, cos_theta_squared)
+        sin_theta = tf.math.sqrt(sin_theta_squared)
 
-        cos_theta_margin = tf.subtract(
-            tf.multiply(cos_theta, self.cos_margin),
-            tf.multiply(sin_theta, self.sin_margin)
+        cos_theta_arcface = tf.math.subtract(
+            tf.math.multiply(cos_theta, self.cos_margin),
+            tf.math.multiply(sin_theta, self.sin_margin)
         )
+        cos_theta_arcface_scaled = tf.math.multiply(self.scale, cos_theta_arcface)
 
         # Constraint θ + margin < π
         # TODO: move the following comment to the project relation
@@ -87,39 +85,34 @@ class ArcFace(tf.keras.layers.Layer):
         https://github.com/ronghuaiyang/arcface-pytorch/issues/24#issue-428144388
         https://github.com/ronghuaiyang/arcface-pytorch/issues/24#issuecomment-510078581 
         """
-        condition_function = cos_theta - self.threshold
-        condition = tf.cast(tf.relu(condition_function), dtype=tf.bool)
+        arcface_condition_function = cos_theta - self.threshold
+        arcface_condition_mask = tf.cast(tf.nn.relu(arcface_condition_function), dtype=tf.bool)
 
-        cos_face = tf.multiply(self.scale, tf.subtract(cos_theta, self.margin_cosface))
+        cos_theta_cosface = tf.math.subtract(cos_theta, self.margin_cosface)
+        cos_theta_cosface_scaled = tf.math.multiply(self.scale, cos_theta_cosface)
 
-        cos_theta_margin_conditioned = tf.where(condition, cos_theta_margin, cos_face)
+        cos_theta_conditioned = tf.where(arcface_condition_mask, cos_theta_arcface_scaled, cos_theta_cosface_scaled)
 
         # Create a mask for applying the arcface loss only when required
-        mask = tf.one_hot(labels, depth=self.output_units)
-        inverted_mask = tf.subtract(1.0, mask)
+        gt_mask = tf.one_hot(labels, depth=self.output_units)
+        gt_inverted_mask = tf.math.subtract(1.0, gt_mask)
 
-        # Scale all the cos_theta
-        cos_theta_scaled = tf.multiply(self.scale, cos_theta)
+        # Scale the original logits obtained by the dot product operation
+        # This is necessary for avoiding to apply the arcFace to logits that are not
+        # referring to the ground truth class
+        cos_theta_scaled = tf.math.multiply(self.scale, cos_theta)
 
-        # Compute the final layer output
-        output = tf.add(
-            tf.multiply(cos_theta_scaled, inverted_mask),
-            tf.multiply(cos_theta_margin_conditioned, mask)
+        # Compute the final layer output by performing the following operations:
+        # 1) keep the original (scaled) logits for those that are NOT referring to the ground truth class
+        # 2) use the arcFace otherwise
+        # 3) sum the results of 1) and 2)
+        # 4) apply the softmax
+        output = tf.math.add(
+            tf.math.multiply(cos_theta_scaled, gt_inverted_mask),
+            tf.math.multiply(cos_theta_conditioned, gt_mask)
         )
 
         output = tf.keras.activations.softmax(output)
 
         return output
 
-
-
-
-
-
-
-
-
-
-
-
-        return 0
