@@ -4,44 +4,9 @@ from tensorflow.keras import layers
 
 from pseudo_labels_generator import Generator
 from images_loader import import_image_np_dataset
-import spec_augmentation
+from arcface_layer import ArcFace
 
-from architectures.arcface_layer import ArcFace
-
-POST_PROCESSING_OPTIONS = {
-    "normalize": True,
-    "pca": 128,
-    "whiten": True,
-    "l2 normalize": True
-}
-
-RGB_NORMALIZATION = True
-
-SPEC_AUGMENTATION_OPTIONS = {
-    "apply": True,
-    "policy": spec_augmentation.POLICIES["LB"]
-}
-
-EARLY_STOPPING_OPTIONS = {
-    "apply": True,
-    "min_delta": 0.005,
-    "patience": 1
-}
-
-IMAGES_PATH = "Samples"
-
-POOLING = "max"
-DIM_REPRESENTATION = 512
-INPUT_SHAPE = (240, 320, 3)
-N_CLUSTERS = 20  # Test value
-CLUSTERING_METHOD = "kmeans"
-
-LEARNING_RATE = 1e-3
-OPTIMIZER = tf.keras.optimizers.Adam(LEARNING_RATE, beta_1=0.8, beta_2=0.999, epsilon=1e-7)
-LOSS = tf.keras.losses.SparseCategoricalCrossentropy()
-BATCH_SIZE = 16
-EPOCHS = 50
-
+import config
 
 class ConvNet(tf.keras.Model):
 
@@ -63,7 +28,6 @@ class ConvNet(tf.keras.Model):
 
         return x
 
-
 class Classifier(tf.keras.Model):
 
     def __init__(self, conv_net, n_clusters, use_arcface=False):
@@ -82,25 +46,23 @@ class Classifier(tf.keras.Model):
 
         return x
 
-
 class CustomEarlyStop(tf.keras.callbacks.Callback):
+    
     def on_epoch_end(self, epoch, logs=None):
         if self.model.conv_net.force_stop:
             print("\nEarly stopping...")
             self.model.stop_training = True
 
-
-def build_model(input_shape, pooling, linear_units, n_clusters, optimizer, loss_function):
+def build_model(input_shape, pooling, linear_units, n_clusters, optimizer, loss_function, use_arcface):
     input = tf.keras.Input(shape=input_shape)
 
     conv_net = ConvNet(input_shape, pooling, linear_units)
 
-    model = Classifier(conv_net, n_clusters)
+    model = Classifier(conv_net, n_clusters, use_arcface)
     model(input)
     model.compile(optimizer=optimizer, loss=loss_function)
 
     return model
-
 
 def train_model(model, inputs, batch_size, epochs, callbacks, post_processing_options, spec_augmentation_options,
                 early_stopping_options, cluster_method, cluster_args):
@@ -119,16 +81,30 @@ def train_model(model, inputs, batch_size, epochs, callbacks, post_processing_op
                         epochs=epochs,
                         callbacks=callbacks)
 
-
 # -------------------------------------------------
 # Test
-inputs = import_image_np_dataset(IMAGES_PATH, (INPUT_SHAPE[0], INPUT_SHAPE[1]), RGB_NORMALIZATION)
+inputs = import_image_np_dataset(config.IMAGES_PATH, (config.INPUT_SHAPE[0], config.INPUT_SHAPE[1]), config.RGB_NORMALIZATION)
 
 cluster_args = {
-    "n_clusters": N_CLUSTERS
+    "n_clusters": config.N_CLUSTERS
 }
 
-model = build_model(INPUT_SHAPE, POOLING, DIM_REPRESENTATION, N_CLUSTERS, OPTIMIZER, LOSS)
+model = build_model(config.INPUT_SHAPE,
+                    config.POOLING,
+                    config.DIM_REPRESENTATION,
+                    config.N_CLUSTERS,
+                    config.OPTIMIZER,
+                    config.LOSS,
+                    config.USE_ARCFACE_LOSS)
 model.summary()
-train_model(model, inputs, BATCH_SIZE, EPOCHS, [CustomEarlyStop()], POST_PROCESSING_OPTIONS, SPEC_AUGMENTATION_OPTIONS,
-            EARLY_STOPPING_OPTIONS, CLUSTERING_METHOD, cluster_args)
+
+train_model(model,
+            inputs,
+            config.BATCH_SIZE,
+            config.EPOCHS,
+            [CustomEarlyStop()],
+            config.POST_PROCESSING_OPTIONS,
+            config.SPEC_AUGMENTATION_OPTIONS,
+            config.EARLY_STOPPING_OPTIONS,
+            config.CLUSTERING_METHOD,
+            cluster_args)

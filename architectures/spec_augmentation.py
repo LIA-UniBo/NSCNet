@@ -1,5 +1,7 @@
 #Reference: https://arxiv.org/pdf/1904.08779.pdf
 
+#This module contains the three proposed methods to do data augmentation on spectrograms
+
 import numpy as np
 import tensorflow as tf
 from tensorflow_addons.image import sparse_image_warp
@@ -18,6 +20,7 @@ p   : Parameter for calculating upper bound for time mask
 m_T : Number of time masks
 """
 
+#List of the 4 policies (set of parameters) used in the official cited paper above
 POLICIES = {
 "LB":{"W":80,"F":27,"m_F":1,"T":100,"p":1.0,"m_T":1},
 "LD":{"W":80,"F":27,"m_F":2,"T":100,"p":1.0,"m_T":2},
@@ -26,6 +29,8 @@ POLICIES = {
 }
 
 def augment(spectrogram, **policy):
+
+    #Apply all the three methods to do spec-augmentation
 
     augmented_spectrogram = np.copy(spectrogram)
     augmented_spectrogram = time_warp(augmented_spectrogram, **policy)
@@ -36,32 +41,48 @@ def augment(spectrogram, **policy):
 
 def time_warp(spectrogram, W, **kwargs):
 
+    """
+    Warp the image along the time axis
+    """
+
+    #Check that there is only one spectrogram (not a batch)
     assert len(spectrogram.shape)==3
 
+    #Get mel bins and time steps (height and width of the image, respectively)
     v, tau = spectrogram.shape[0], spectrogram.shape[1]
 
+    #Take the mid horizontal line of the image
     mid_line = spectrogram[v//2]
 
-    random_point = mid_line[np.random.randint(W, tau - W)] # random point along the horizontal/time axis
-    w = np.random.randint((-W), W) # distance
+    #Take a random point along the horizontal/time axis
+    random_point = mid_line[np.random.randint(W, tau - W)]
+    #Choose warp distance
+    w = np.random.randint((-W), W)
 
-    # Source Points
+    #Source Points
     src_points = [[[v//2, random_point[0]]]]
 
-    # Destination Points
+    #Destination Points
     dest_points = [[[v//2, random_point[0] + w]]]
 
+    #Warp the spectrogram
     spectrogram, _ = sparse_image_warp(spectrogram, src_points, dest_points, num_boundary_points=2)
 
     return spectrogram.numpy()
 
 def frequency_mask(spectrogram, m_F, F, **kwargs):
 
+    """
+    Mask some random frequencies
+    """
+
+    #Check that there is only one spectrogram (not a batch)
     assert len(spectrogram.shape)==3
 
-    v = spectrogram.shape[0] # no. of frequencies
+    #Get mel bins (number of frequencies, corresponding the the height of the image)
+    v = spectrogram.shape[0]
 
-    # apply m_F frequency masks to the mel spectrogram
+    # Apply m_F frequency masks to the spectrogram
     for i in range(m_F):
         f = np.random.randint(0, F) # [0, F)
         f0 = np.random.randint(0, v - f) # [0, v - f)
@@ -71,13 +92,16 @@ def frequency_mask(spectrogram, m_F, F, **kwargs):
 
 def time_mask(spectrogram, p, m_T, T ,**kwargs):
 
+    #Check that there is only one spectrogram (not a batch)
     assert len(spectrogram.shape)==3
 
-    tau = spectrogram.shape[1] # time frames
+    #Get time steps (width of the image)
+    tau = spectrogram.shape[1]
 
+    #Fix a window with p*tau as the upper bound
     window = min(T, p*tau)
 
-    # apply m_T time masks to the mel spectrogram
+    #Apply m_T time masks to the spectrogram
     for i in range(m_T):
         t = np.random.randint(0, window) # [0, T)
         t0 = np.random.randint(0, tau - t) # [0, tau - t)
