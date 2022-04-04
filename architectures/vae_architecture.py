@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from tensorflow.keras import layers, metrics
 
 from architectures import clustering
