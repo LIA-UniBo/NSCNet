@@ -1,11 +1,11 @@
 import numpy as np
-import tensorflow as tf
+import matplotlib.pyplot as plt
 from tensorflow.keras import layers, metrics
 
-from images_loader import import_image_np_dataset
-import clustering
+from architectures import clustering
+from architectures.vae_config import *
 
-import vae_config as config
+from architectures.images_loader import import_image_np_dataset
 
 
 class Encoder(tf.keras.Model):
@@ -58,11 +58,12 @@ class Decoder(tf.keras.Model):
                                                              name=f'decoder_deconv_{i}')
                                       for i in range(n_conv_layers, 0, -1)]
 
-        self.output_layer = layers.Conv2DTranspose(3,
+        # TODO: pass the number of channels as parameter!
+        self.output_layer = layers.Conv2DTranspose(INPUT_SHAPE[2],
                                                    kernel_size,
                                                    padding="same",
                                                    data_format="channels_last",
-                                                   activation="sigmoid")  # Why sigmoid?
+                                                   activation="sigmoid")
 
         self.dense_layer = None
         self.reshape_layer = None
@@ -85,7 +86,7 @@ class Decoder(tf.keras.Model):
         for conv_transpose_layer in self.conv_transpose_layers:
             x = conv_transpose_layer(x)
 
-        x = self.output_layer(x)  # Note: this layer is used often in examples, is it necessary?
+        x = self.output_layer(x)
 
         return x
 
@@ -104,6 +105,8 @@ class ConvolutionalVAE(tf.keras.Model):
 
     def call(self, x):
         mean_x, log_var_x, compressed_shape = self.encode(x)
+
+        # Reparametrization trick
         z = self.sample(mean_x, log_var_x)
         decoded_x = self.decode(z, compressed_shape)
 
@@ -154,14 +157,15 @@ class ConvolutionalVAE(tf.keras.Model):
         return {
             "loss": self.total_loss_tracker.result(),
             "reconstruction_loss": self.reconstruction_loss_tracker.result(),
-            "kl_loss": self.kl_loss_tracker.result()}
+            "kl_loss": self.kl_loss_tracker.result()
+        }
 
 
 def build_model(input_shape, stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers, optimizer):
     input = tf.keras.Input(shape=input_shape)
     vae = ConvolutionalVAE(stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers)
     vae(input)
-    vae.compile(optimizer=optimizer)
+    vae.compile(optimizer=optimizer, run_eagerly=True)
 
     return vae
 
@@ -171,7 +175,22 @@ def train_model(model, data, epochs, batch_size):
                         epochs=epochs,
                         batch_size=batch_size,
                         verbose=1)
+
+    # TODO: to remove, just for test.
+    save_test_images(data, model)
+
     return history
+
+
+def save_test_images(data, model):
+    mean_x, log_var_x, compressed_shape = model.encode(data)
+
+    z = model.sample(mean_x, log_var_x)
+    decoded_x = model.decode(z, compressed_shape)
+    for i, img in enumerate(data[:100]):
+        plt.imsave(f'data/original/{i}.png', np.squeeze(img, axis=-1), cmap='gray')
+    for i, img in enumerate(decoded_x[:100]):
+        plt.imsave(f'data/decoded/{i}.png', np.squeeze(img.numpy(), axis=-1), cmap='gray')
 
 
 def clusterize(vae, samples, cluster_method, cluster_args):
@@ -194,29 +213,32 @@ def clusterize(vae, samples, cluster_method, cluster_args):
 
 # -----------------------------------
 # Test
-inputs = import_image_np_dataset(config.IMAGES_PATH, (config.INPUT_SHAPE[0], config.INPUT_SHAPE[1]),
-                                 config.RGB_NORMALIZATION)
+
+inputs = import_image_np_dataset(IMAGES_PATH, (INPUT_SHAPE[0], INPUT_SHAPE[1]),
+                                 RGB_NORMALIZATION)
+
 
 cluster_args = {
-    "n_clusters": config.N_CLUSTERS
+    "n_clusters": N_CLUSTERS
 }
 
-model = build_model(config.INPUT_SHAPE,
-                    config.STRIDE,
-                    config.KERNEL_SIZE,
-                    config.PADDING,
-                    config.STARTING_FILTERS,
-                    config.LATENT_DIM,
-                    config.N_CONV_LAYERS,
-                    config.OPTIMIZER)
+model = build_model(INPUT_SHAPE,
+                    STRIDE,
+                    KERNEL_SIZE,
+                    PADDING,
+                    STARTING_FILTERS,
+                    LATENT_DIM,
+                    N_CONV_LAYERS,
+                    OPTIMIZER)
 
 model.summary(expand_nested=True)
 
 
 print("Training launched...")
-history = train_model(model, inputs, config.EPOCHS, config.BATCH_SIZE)
+history = train_model(model, inputs, EPOCHS, BATCH_SIZE)
 print("Training completed!")
 
+
 print("Clustering launched...")
-clusters = clusterize(model, inputs, config.CLUSTERING_METHOD, cluster_args)
+clusters = clusterize(model, inputs, CLUSTERING_METHOD, cluster_args)
 print("Clustering completed!")
