@@ -6,7 +6,7 @@ from pseudo_labels_generator import Generator
 from images_loader import import_image_np_dataset
 from arcface_layer import ArcFace
 
-import config
+import nscnet_config as config
 
 class ConvNet(tf.keras.Model):
 
@@ -47,7 +47,7 @@ class Classifier(tf.keras.Model):
         return x
 
 class CustomEarlyStop(tf.keras.callbacks.Callback):
-    
+
     def on_epoch_end(self, epoch, logs=None):
         if self.model.conv_net.force_stop:
             print("\nEarly stopping...")
@@ -81,6 +81,8 @@ def train_model(model, inputs, batch_size, epochs, callbacks, post_processing_op
                         epochs=epochs,
                         callbacks=callbacks)
 
+    return history
+
 # -------------------------------------------------
 # Test
 inputs = import_image_np_dataset(config.IMAGES_PATH, (config.INPUT_SHAPE[0], config.INPUT_SHAPE[1]), config.RGB_NORMALIZATION)
@@ -98,7 +100,7 @@ model = build_model(config.INPUT_SHAPE,
                     config.USE_ARCFACE_LOSS)
 model.summary()
 
-train_model(model,
+history = train_model(model,
             inputs,
             config.BATCH_SIZE,
             config.EPOCHS,
