@@ -1,4 +1,4 @@
-#This module handles all the operations between one epoch and the other in the training phase
+# This module handles all the operations between one epoch and the other in the training phase
 
 import numpy as np
 import math
@@ -11,9 +11,12 @@ import clustering
 import spec_augmentation
 from uniform_cluster_sampler import ClusterSampler
 
+
 class Generator(tf.keras.utils.Sequence):
 
-    def __init__(self, x, batch_size, conv_net_model, features_extraction_options, spec_augmentation_options, early_stopping_options, cluster_method, cluster_args, shuffle=True, verbose=True, custom_sampler=True):
+    def __init__(self, x, batch_size, conv_net_model, features_extraction_options,
+                 spec_augmentation_options, early_stopping_options, cluster_method,
+                 cluster_args, shuffle=True, verbose=True, custom_sampler=True):
 
         """
         Parameters:
@@ -54,22 +57,22 @@ class Generator(tf.keras.utils.Sequence):
         self.verbose = verbose
         self.custom_sampler = custom_sampler
 
-        #Shuffle the input data
+        # Shuffle the input data
         if shuffle:
             np.random.shuffle(self.x)
 
-        #Create the first random labels to start the training
+        # Create the first random labels to start the training
         self.y = self.generate_pseudo_labels()
         self.nmi_scores = []
 
-        #Divide the samples in different lists depending on their labels
+        # Divide the samples in different lists depending on their labels
         if self.custom_sampler:
             self.sampler = ClusterSampler(cluster_args["n_clusters"], batch_size)
             self.sampler.segment_clusters(self.y)
 
     def __len__(self):
 
-        #Return the number of batches for training
+        # Return the number of batches for training
 
         return math.ceil(len(self.x) / self.batch_size)
 
@@ -79,16 +82,16 @@ class Generator(tf.keras.utils.Sequence):
         Send the next batch of inputs and correspondent labels to the network.
         """
 
-        #Apply uniform sampling to avoid having a batch whose samples belong to the same cluster
+        # Apply uniform sampling to avoid having a batch whose samples belong to the same cluster
         if self.custom_sampler:
             batch_x, batch_y = self.sampler.sample(self.x, self.y)
 
-        #Create batches following data order
+        # Create batches following data order
         else:
             batch_x = self.x[idx * self.batch_size:(idx + 1) * self.batch_size]
             batch_y = self.y[idx * self.batch_size:(idx + 1) * self.batch_size]
 
-        #Produce an augmented version of all the images in the batch
+        # Produce an augmented version of all the images in the batch
         if self.spec_augmentation_options["apply"] is True:
             policy = self.spec_augmentation_options["policy"]
             augment_batch_func = lambda x: spec_augmentation.augment(x, **policy)
@@ -102,15 +105,15 @@ class Generator(tf.keras.utils.Sequence):
         Operations to be done at the end of each epoch
         """
 
-        #Copy the previous labels
+        # Copy the previous labels
         old_y = np.copy(self.y)
-        #Generate the new pseudo-labels
+        # Generate the new pseudo-labels
         self.y = self.generate_pseudo_labels()
 
-        #Update the metrics involving previous and current labels
+        # Update the metrics involving previous and current labels
         self.update_metrics(old_y, self.y)
 
-        #Divide the samples in different lists depending on their labels
+        # Divide the samples in different lists depending on their labels
         if self.custom_sampler:
             self.sampler.segment_clusters(self.y)
 
@@ -125,23 +128,23 @@ class Generator(tf.keras.utils.Sequence):
         if self.verbose:
             print("Started generating pseudo-labels...")
 
-        #Use the layer responsible for features extraction to extract the features of the entire dataset
-        features = self.feature_extractor.predict(self.x, self.batch_size) #(N_samples, 512)
+        # Use the layer responsible for features extraction to extract the features of the entire dataset
+        features = self.feature_extractor.predict(self.x, self.batch_size)  # (N_samples, 512)
 
-        #Apply all the request operations to the extracted features (PCA, Whitening, Normalization ecc.)
-        features = self.run_features_post_processing(features) #(N_samples, PCA_dim)
+        # Apply all the request operations to the extracted features (PCA, Whitening, Normalization ecc.)
+        features = self.run_features_post_processing(features)  # (N_samples, PCA_dim)
 
-        #Apply the selected clustering method on the extracted features of the entire dataset
+        # Apply the selected clustering method on the extracted features of the entire dataset
         clustering_output = None
-        if self.cluster_method=="kmeans":
+        if self.cluster_method == "kmeans":
             clustering_output = clustering.k_means(features, **self.cluster_args)
-        elif self.cluster_method=="dbscan":
+        elif self.cluster_method == "dbscan":
             clustering_output = clustering.dbscan(features, **self.cluster_args)
 
-        #Log the required time to produce the new labels
+        # Log the required time to produce the new labels
         if self.verbose:
             execution_time = time.time() - start_time
-            print("Pseudo-labels generation completed in {} seconds".format(round(execution_time,2)))
+            print("Pseudo-labels generation completed in {} seconds".format(round(execution_time, 2)))
 
         return clustering_output["labels"]
 
@@ -151,17 +154,18 @@ class Generator(tf.keras.utils.Sequence):
         Apply all the request operations to the extracted features (PCA, Whitening, Normalization ecc.)
         """
 
-        #Normalize (mean=0 and std=1)
+        # Normalize (mean=0 and std=1)
         if self.features_extraction_options["normalize"]:
             features = matrix_manipulation.normalize(features)
 
-        #PCA and Whitening
+        # PCA and Whitening
         pca_n_components = self.features_extraction_options["pca"]
         apply_whitening = self.features_extraction_options["whiten"]
         if pca_n_components is not None:
-            features, lost_variance_information = matrix_manipulation.compute_pca(features, pca_n_components, apply_whitening)
+            features, lost_variance_information = matrix_manipulation.compute_pca(features, pca_n_components,
+                                                                                  apply_whitening)
 
-        #L2-normalize
+        # L2-normalize
         if self.features_extraction_options["l2 normalize"]:
             features = matrix_manipulation.l2_normalize(features)
 
@@ -173,14 +177,14 @@ class Generator(tf.keras.utils.Sequence):
         Update the metrics and check for early stopping
         """
 
-        #Compute the Normalized Mutual Information between old and new pseudo-labels
+        # Compute the Normalized Mutual Information between old and new pseudo-labels
         nmi_score = nmi(old_y, new_y)
-        #Update history of metrics
+        # Update history of metrics
         self.nmi_scores.append(nmi_score)
         if self.verbose:
             print("NMI score: {}".format(nmi_score))
 
-        #Check for early stopping
+        # Check for early stopping
         if self.early_stopping_options["apply"]:
             self.check_early_stopping()
 
@@ -191,13 +195,13 @@ class Generator(tf.keras.utils.Sequence):
         """
 
         min_delta = self.early_stopping_options["min_delta"]
-        patience = self.early_stopping_options["patience"]+1
+        patience = self.early_stopping_options["patience"] + 1
 
-        if len(self.nmi_scores)>=patience:
-            last_scores = self.nmi_scores[-patience:] #Take N=patience+1 last scores
-            delta_scores = -np.diff(last_scores) #Compute deltas between consecutive scores (epochs)
-            no_improvemements = np.all(delta_scores<min_delta) #Check if there is no improvement in all of them
+        if len(self.nmi_scores) >= patience:
+            last_scores = self.nmi_scores[-patience:]  # Take N=patience+1 last scores
+            delta_scores = -np.diff(last_scores)  # Compute deltas between consecutive scores (epochs)
+            no_improvemements = np.all(delta_scores < min_delta)  # Check if there is no improvement in all of them
 
-            #Stop the training
+            # Stop the training
             if no_improvemements:
-                self.feature_extractor.force_stop=True
+                self.feature_extractor.force_stop = True

@@ -28,6 +28,7 @@ class ConvNet(tf.keras.Model):
 
         return x
 
+
 class Classifier(tf.keras.Model):
 
     def __init__(self, conv_net, n_clusters, use_arcface=False):
@@ -46,6 +47,7 @@ class Classifier(tf.keras.Model):
 
         return x
 
+
 class CustomEarlyStop(tf.keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
@@ -53,19 +55,22 @@ class CustomEarlyStop(tf.keras.callbacks.Callback):
             print("\nEarly stopping...")
             self.model.stop_training = True
 
+
 def build_model(input_shape, pooling, linear_units, n_clusters, optimizer, loss_function, use_arcface):
     input = tf.keras.Input(shape=input_shape)
 
     conv_net = ConvNet(input_shape, pooling, linear_units)
 
-    model = Classifier(conv_net, n_clusters, use_arcface)
+    model = Classifier(conv_net, n_clusters, use_arcface=use_arcface)
     model(input)
     model.compile(optimizer=optimizer, loss=loss_function)
 
     return model
 
+
 def train_model(model, inputs, batch_size, epochs, callbacks, post_processing_options, spec_augmentation_options,
                 early_stopping_options, cluster_method, cluster_args):
+
     generator = Generator(inputs,
                           batch_size,
                           model.conv_net,
