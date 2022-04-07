@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from matrix_manipulation import compute_pca
+from matrix_manipulation import compute_pca, compute_lda, normalize
 
 def visualize_data(data):
 
@@ -14,13 +14,21 @@ def visualize_data(data):
     plt.scatter(x, y, c="blue", alpha=0.5)
     plt.show()
 
-def visualize_clusters(data, clusters_labels):
+def visualize_clusters(data, clusters_labels, use_lda=True):
 
-    projected_data, lost_variance_information = compute_pca(data, 2, False)
+    data = normalize(data)
+    projected_data = None
+    lost_variance_information = None
+
+    if use_lda:
+        projected_data, lost_variance_information = compute_lda(data, clusters_labels, 2)
+    else:
+        projected_data, lost_variance_information = compute_pca(data, 2, False)
+
     x = projected_data[:,0]
     y = projected_data[:,1]
 
-    print("Lost variance information in PCA: {}".format(lost_variance_information))
+    print("Lost variance information in dimensionality reduction: {}".format(lost_variance_information))
 
     non_empty_labels = np.unique(clusters_labels)
 
