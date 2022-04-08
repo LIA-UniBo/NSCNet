@@ -1,11 +1,9 @@
-import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
 
 from architectures.arcface_layer import ArcFace
-from architectures.images_loader import import_image_np_dataset
-from architectures.pseudo_labels_generator import Generator
 import architectures.nscnet_config as config
+from architectures.pseudo_labels_generator import Generator
 
 
 class ConvNet(tf.keras.Model):
@@ -56,45 +54,68 @@ class CustomEarlyStop(tf.keras.callbacks.Callback):
             self.model.stop_training = True
 
 
-def build_model(input_shape, pooling, linear_units, n_clusters, optimizer, loss_function, use_arcface):
-    input = tf.keras.Input(shape=input_shape)
+class NSCNet:
+    def __init__(self, input_shape, cluster_dic):
+        self.cluster_args = cluster_dic['config']
+        self.cluster_method = cluster_dic['method']
 
-    conv_net = ConvNet(input_shape, pooling, linear_units)
+        self.model = self.build_model(cluster_dic['n_clusters'], input_shape)
+        self.model.summary()
+        print('NSCNet initialization completed.')
 
-    model = Classifier(conv_net, n_clusters, use_arcface=use_arcface)
-    model(input)
-    model.compile(optimizer=optimizer, loss=loss_function)
+    def build_model(self, n_clusters, input_shape):
 
-    return model
+        model_input = tf.keras.Input(shape=input_shape)
+
+        conv_net = ConvNet(input_shape,
+                           config.POOLING,
+                           config.DIM_REPRESENTATION)
+
+        model = Classifier(conv_net,
+                           n_clusters,
+                           use_arcface=config.USE_ARCFACE_LOSS)
+        model(model_input)
+        model.compile(optimizer=config.OPTIMIZER, loss=config.LOSS)
+
+        return model
+
+    def train_model(self, inputs):
+        generator = Generator(inputs,
+                              config.BATCH_SIZE,
+                              self.model.conv_net,
+                              config.POST_PROCESSING_OPTIONS,
+                              config.SPEC_AUGMENTATION_OPTIONS,
+                              config.EARLY_STOPPING_OPTIONS,
+                              self.cluster_method,
+                              self.cluster_args)
+
+        history = self.model.fit(x=generator,
+                                 verbose=1,
+                                 batch_size=config.BATCH_SIZE,
+                                 epochs=config.EPOCHS,
+                                 callbacks=[CustomEarlyStop()])
+
+        return history
+
+    def compute_clusters(self, inputs):
+        generator = Generator(inputs,
+                              config.BATCH_SIZE,
+                              self.model.conv_net,
+                              config.POST_PROCESSING_OPTIONS,
+                              config.SPEC_AUGMENTATION_OPTIONS,
+                              config.EARLY_STOPPING_OPTIONS,
+                              self.cluster_method,
+                              self.cluster_args)
+
+        return generator.generate_pseudo_labels()
 
 
-def train_model(model, inputs, batch_size, epochs, callbacks, post_processing_options, spec_augmentation_options,
-                early_stopping_options, cluster_method, cluster_args):
-
-    generator = Generator(inputs,
-                          batch_size,
-                          model.conv_net,
-                          post_processing_options,
-                          spec_augmentation_options,
-                          early_stopping_options,
-                          cluster_method,
-                          cluster_args)
-
-    history = model.fit(x=generator,
-                        verbose=1,
-                        batch_size=batch_size,
-                        epochs=epochs,
-                        callbacks=callbacks)
-
-    return history
-
+'''
 # -------------------------------------------------
 # Test
 inputs = import_image_np_dataset(config.IMAGES_PATH, (config.INPUT_SHAPE[0], config.INPUT_SHAPE[1]), config.RGB_NORMALIZATION)
 
-cluster_args = {
-    "n_clusters": config.N_CLUSTERS
-}
+
 
 model = build_model(config.INPUT_SHAPE,
                     config.POOLING,
@@ -115,3 +136,4 @@ history = train_model(model,
             config.EARLY_STOPPING_OPTIONS,
             config.CLUSTERING_METHOD,
             cluster_args)
+'''

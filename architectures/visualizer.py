@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from matrix_manipulation import compute_pca, compute_lda, normalize
+from architectures.matrix_manipulation import compute_pca, compute_lda, normalize
+
 
 def visualize_data(data):
 
@@ -13,6 +14,7 @@ def visualize_data(data):
 
     plt.scatter(x, y, c="blue", alpha=0.5)
     plt.show()
+
 
 def visualize_clusters(data, clusters_labels, use_lda=True):
 

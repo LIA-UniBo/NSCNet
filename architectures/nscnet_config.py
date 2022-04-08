@@ -10,8 +10,6 @@ POST_PROCESSING_OPTIONS = {
     "l2 normalize": True
 }
 
-RGB_NORMALIZATION = True
-
 SPEC_AUGMENTATION_OPTIONS = {
     "apply": True,
     "policy": spec_augmentation.POLICIES["LB"]
@@ -23,18 +21,20 @@ EARLY_STOPPING_OPTIONS = {
     "patience": 10
 }
 
-IMAGES_PATH = "Samples"
-
 POOLING = "max"
 DIM_REPRESENTATION = 512
-INPUT_SHAPE = (240, 320, 3)
-N_CLUSTERS = 20  # Test value
-CLUSTERING_METHOD = "kmeans"
+
 
 LEARNING_RATE = 1e-3
 OPTIMIZER = tf.keras.optimizers.Adam(LEARNING_RATE)
 LOSS = tf.keras.losses.SparseCategoricalCrossentropy()
 BATCH_SIZE = 16
-EPOCHS = 50
+EPOCHS = 1
 
 USE_ARCFACE_LOSS = False
+
+# RGB_NORMALIZATION = True
+# N_CLUSTERS = 20  # Test value
+# CLUSTERING_METHOD = "kmeans"
+# IMAGES_PATH = "data"
+# INPUT_SHAPE = (64, 512, 3)

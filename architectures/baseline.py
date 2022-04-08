@@ -1,10 +1,10 @@
 import numpy as np
 
-from images_loader import import_image_np_dataset
-import clustering
-import matrix_manipulation
-import visualizer
-from baseline_config import *
+from architectures import matrix_manipulation, clustering, visualizer
+from architectures.images_loader import import_image_np_dataset
+
+from architectures.baseline_config import *
+
 
 def compress_data(data, normalize, pca, whiten, l2_normalize):
 
@@ -23,6 +23,7 @@ def compress_data(data, normalize, pca, whiten, l2_normalize):
 
     return data
 
+
 def clusterize(data, cluster_method, cluster_args, compression_options):
 
     if cluster_method not in clustering.CLUSTERING_METHODS:
@@ -38,8 +39,9 @@ def clusterize(data, cluster_method, cluster_args, compression_options):
 
     return features, clustering_output["labels"]
 
-#----------------------------------------------
-#Test
+
+# ----------------------------------------------
+# Test
 inputs = import_image_np_dataset(IMAGES_PATH, (INPUT_SHAPE[0], INPUT_SHAPE[1]), RGB_NORMALIZATION)
 
 cluster_args = {

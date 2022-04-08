@@ -60,7 +60,8 @@ class Generator(tf.keras.utils.Sequence):
             np.random.shuffle(self.x)
 
         # Create the first random labels to start the training
-        self.y = self.generate_pseudo_labels()
+        clustering_result, _ = self.generate_pseudo_labels()
+        self.y = clustering_result["labels"]
         self.nmi_scores = []
 
         # Divide the samples in different lists depending on their labels
@@ -105,7 +106,8 @@ class Generator(tf.keras.utils.Sequence):
         # Copy the previous labels
         old_y = np.copy(self.y)
         # Generate the new pseudo-labels
-        self.y = self.generate_pseudo_labels()
+        clustering_result, _ = self.generate_pseudo_labels()
+        self.y = clustering_result["labels"]
 
         # Update the metrics involving previous and current labels
         self.update_metrics(old_y, self.y)
@@ -142,7 +144,7 @@ class Generator(tf.keras.utils.Sequence):
             execution_time = time.time() - start_time
             print("Pseudo-labels generation completed in {} seconds".format(round(execution_time, 2)))
 
-        return clustering_output["labels"]
+        return clustering_output, features
 
     def run_features_post_processing(self, features):
 

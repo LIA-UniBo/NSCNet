@@ -9,6 +9,10 @@
 .idea
 __pycache__/
 data/
+results/
+
+!data/.gitkeep
+!results/.gitkeep
 
 # User-specific stuff
 .idea/**/workspace.xml
