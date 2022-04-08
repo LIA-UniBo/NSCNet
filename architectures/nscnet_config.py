@@ -1,7 +1,12 @@
 # This module contains constants
 
 import tensorflow as tf
+import os
 from architectures import spec_augmentation
+
+SAVE_WEIGHTS = True
+LOAD_WEIGHTS = True
+WEIGHTS_PATH = os.path.join("architectures","weights","nscnet")
 
 POST_PROCESSING_OPTIONS = {
     "normalize": True,

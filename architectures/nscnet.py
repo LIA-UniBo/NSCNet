@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras import layers
+import os
 
 from architectures.arcface_layer import ArcFace
 import architectures.nscnet_config as config
@@ -56,10 +57,24 @@ class CustomEarlyStop(tf.keras.callbacks.Callback):
 
 class NSCNet:
     def __init__(self, input_shape, cluster_dic):
+        self.n_clusters = cluster_dic['n_clusters']
         self.cluster_args = cluster_dic['config']
         self.cluster_method = cluster_dic['method']
 
-        self.model = self.build_model(cluster_dic['n_clusters'], input_shape)
+        self.checkpoint_path = os.path.join(config.WEIGHTS_PATH, "checkpoint {} {}.ckpt".format(self.cluster_method, self.n_clusters))
+
+        self.model = self.build_model(self.n_clusters, input_shape)
+
+        if config.LOAD_WEIGHTS:
+            if os.path.exists(self.checkpoint_path + ".index"):
+                print("Loading model's weights...")
+                self.model.load_weights(self.checkpoint_path)
+                print("Model's weights successfully loaded!")
+
+            else:
+                print("WARNING: model's weights not found, the model will be executed with initialized random weights.")
+                print("Ignore this warning if it is a test.")
+
         self.model.summary()
         print('NSCNet initialization completed.')
 
@@ -89,11 +104,15 @@ class NSCNet:
                               self.cluster_method,
                               self.cluster_args)
 
+        callbacks = [CustomEarlyStop()]
+        if config.SAVE_WEIGHTS:
+            callbacks.append(tf.keras.callbacks.ModelCheckpoint(filepath=self.checkpoint_path, save_weights_only=True, verbose=1))
+
         history = self.model.fit(x=generator,
                                  verbose=1,
                                  batch_size=config.BATCH_SIZE,
                                  epochs=config.EPOCHS,
-                                 callbacks=[CustomEarlyStop()])
+                                 callbacks=callbacks)
 
         return history
 
@@ -105,10 +124,11 @@ class NSCNet:
                               config.SPEC_AUGMENTATION_OPTIONS,
                               config.EARLY_STOPPING_OPTIONS,
                               self.cluster_method,
-                              self.cluster_args)
+                              self.cluster_args,
+                              shuffle=False,
+                              custom_sampler=False)
 
         return generator.generate_pseudo_labels()
-
 
 '''
 # -------------------------------------------------
