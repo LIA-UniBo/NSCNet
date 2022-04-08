@@ -6,6 +6,7 @@ import itertools
 import numpy as np
 
 from architectures.nscnet import NSCNet
+from architectures.vae_architecture import VAENet
 from architectures.visualizer import visualize_clusters
 
 
@@ -17,12 +18,13 @@ class NetworkTrainer:
 
     def dbscan(self, inputs):
         method = 'dbscan'
-        config_list = list(itertools.product(config.EPS_VALUES, config.MIN_POINTS, config.N_POSSIBLE_CLUSTERS))
-        for eps, min_points, K in config_list:
+
+        config_list = list(itertools.product(config.EPS_VALUES, config.MIN_SAMPLES, config.N_POSSIBLE_CLUSTERS))
+        for eps, min_samples, K in config_list:
             cluster_args = {
                 'config': {
                     "eps": eps,
-                    "min_samples": min_points,
+                    "min_samples": min_samples,
                     "metric": "euclidean",
                     "n_clusters": K
                 },
@@ -30,7 +32,7 @@ class NetworkTrainer:
                 "method": method
             }
 
-            self.train(K, cluster_args, inputs, method)
+            self.train(cluster_args, inputs, method)
 
     def kmeans(self, inputs):
         method = 'kmeans'
@@ -49,7 +51,7 @@ class NetworkTrainer:
                 "method": method
             }
 
-            self.train(K, cluster_args, inputs, method)
+            self.train(cluster_args, inputs, method)
 
         print("\n\n")
 
@@ -57,7 +59,7 @@ class NetworkTrainer:
     def train(self, **kwargs):
         return
 
-    def save_training_results(self, K, clustering_output, features, clustering_method):
+    def save_training_results(self, cluster_args, clustering_output, features, clustering_method):
 
         # Adapt the content of the clustering_output so it can be saved as a json
         for elem in clustering_output:
@@ -66,7 +68,14 @@ class NetworkTrainer:
             elif isinstance(clustering_output[elem], np.ndarray):
                 clustering_output[elem] = clustering_output[elem].tolist()
 
-        file_name = f'{self.results_dir}/{self.network_name}_{clustering_method}_{K}'
+        if clustering_method == 'kmeans':
+            suffix = f'K{cluster_args["n_clusters"]}'
+        elif clustering_method == 'dbscan':
+            suffix = f'K{cluster_args["n_clusters"]}_EPS{cluster_args["eps"]}_MIN_SAMPLES{cluster_args["min_samples"]}'
+        else:
+            suffix = 'unknown'
+
+        file_name = f'{self.results_dir}/{self.network_name}_{clustering_method}_{suffix}'
 
         # Save image showing clusters
         visualize_clusters(features, clustering_output["labels"], file_path=file_name + '.png')
@@ -80,11 +89,11 @@ class NSCNetTrainer(NetworkTrainer):
     def __init__(self, result_dir='train/results'):
         super().__init__('NSCNet', result_dir)
 
-    def train(self, K, cluster_args, inputs, method):
+    def train(self, cluster_args, inputs, method):
         nscnet = NSCNet(config.INPUT_SHAPE, cluster_args)
         nscnet.train_model(inputs)
         clustering_output, features = nscnet.compute_clusters(inputs)
-        self.save_training_results(K, clustering_output, features, method)
+        self.save_training_results(cluster_args['config'], clustering_output, features, method)
 
 
 class VAENetTrainer(NetworkTrainer):
@@ -92,9 +101,11 @@ class VAENetTrainer(NetworkTrainer):
     def __init__(self, result_dir='train/results'):
         super().__init__('VAENet', result_dir)
 
-    def train(self, K, cluster_args, inputs, method):
-        # TODO: init VAE architecture and train it
-        pass
+    def train(self, cluster_args, inputs, method):
+        vaenet = VAENet(config.INPUT_SHAPE, cluster_args)
+        vaenet.train_model(inputs)
+        clustering_output, features = vaenet.compute_clusters(inputs)
+        self.save_training_results(cluster_args['config'], clustering_output, features, method)
 
 
 class BASENetTrainer(NetworkTrainer):

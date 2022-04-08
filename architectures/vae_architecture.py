@@ -14,7 +14,7 @@ class Encoder(tf.keras.Model):
     def __init__(self, stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers, activation="relu"):
         super(Encoder, self).__init__()
 
-        self.conv_layers = [layers.Conv2D(starting_filters * 2**(i-1),
+        self.conv_layers = [layers.Conv2D(starting_filters * 2 ** (i - 1),
                                           kernel_size,
                                           strides=stride,
                                           padding=padding,
@@ -44,13 +44,13 @@ class Encoder(tf.keras.Model):
 
 class Decoder(tf.keras.Model):
 
-    def __init__(self, stride, kernel_size, padding, starting_filters, n_conv_layers, activation="relu"):
+    def __init__(self, stride, kernel_size, padding, starting_filters, n_conv_layers, input_shape, activation="relu"):
 
         super(Decoder, self).__init__()
 
         self.activation = activation
 
-        self.conv_transpose_layers = [layers.Conv2DTranspose(starting_filters * 2**(i-1),
+        self.conv_transpose_layers = [layers.Conv2DTranspose(starting_filters * 2 ** (i - 1),
                                                              kernel_size,
                                                              strides=stride,
                                                              padding=padding,
@@ -60,7 +60,7 @@ class Decoder(tf.keras.Model):
                                       for i in range(n_conv_layers, 0, -1)]
 
         # TODO: pass the number of channels as parameter!
-        self.output_layer = layers.Conv2DTranspose(INPUT_SHAPE[2],
+        self.output_layer = layers.Conv2DTranspose(input_shape[2],
                                                    kernel_size,
                                                    padding="same",
                                                    data_format="channels_last",
@@ -94,11 +94,19 @@ class Decoder(tf.keras.Model):
 
 class ConvolutionalVAE(tf.keras.Model):
 
-    def __init__(self, stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers, activation="relu"):
+    def __init__(self,
+                 stride,
+                 kernel_size,
+                 padding,
+                 starting_filters,
+                 latent_dim,
+                 n_conv_layers,
+                 input_shape,
+                 activation="relu"):
         super(ConvolutionalVAE, self).__init__()
 
         self.encoder = Encoder(stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers, activation)
-        self.decoder = Decoder(stride, kernel_size, padding, starting_filters, n_conv_layers, activation)
+        self.decoder = Decoder(stride, kernel_size, padding, starting_filters, n_conv_layers, input_shape, activation)
 
         self.total_loss_tracker = metrics.Mean(name="total_loss")
         self.reconstruction_loss_tracker = metrics.Mean(name="reconstruction_loss")
@@ -162,59 +170,74 @@ class ConvolutionalVAE(tf.keras.Model):
         }
 
 
-def build_model(input_shape, stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers, optimizer):
-    input = tf.keras.Input(shape=input_shape)
-    vae = ConvolutionalVAE(stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers)
-    vae(input)
-    vae.compile(optimizer=optimizer, run_eagerly=True)
+class VAENet:
 
-    return vae
+    def __init__(self, input_shape, cluster_dic):
 
+        self.model = self.build_model(input_shape)
+        self.n_clusters = cluster_dic['n_clusters']
+        self.cluster_args = cluster_dic['config']
+        self.cluster_method = cluster_dic['method']
+        self.config = config
 
-def train_model(model, data, epochs, batch_size):
-    history = model.fit(data,
-                        epochs=epochs,
-                        batch_size=batch_size,
-                        verbose=1)
+        self.model = self.build_model(input_shape)
 
-    # TODO: to remove, just for test.
-    # save_test_images(data, model)
+    def build_model(self, input_shape):
+        model_input = tf.keras.Input(shape=input_shape)
+        vae = ConvolutionalVAE(config.STRIDE,
+                               config.KERNEL_SIZE,
+                               config.PADDING,
+                               config.STARTING_FILTERS,
+                               config.LATENT_DIM,
+                               config.N_CONV_LAYERS,
+                               input_shape)
+        vae(model_input)
+        vae.compile(optimizer=config.OPTIMIZER, run_eagerly=False)
 
-    return history
+        return vae
 
+    def train_model(self, data):
+        history = self.model.fit(data,
+                                 epochs=self.config.EPOCHS,
+                                 batch_size=self.config.BATCH_SIZE,
+                                 verbose=1)
 
-def save_test_images(data, model):
-    mean_x, log_var_x, compressed_shape = model.encode(data)
+        # TODO: to remove, just for test.
+        # save_test_images(data, model)
 
-    z = model.sample(mean_x, log_var_x)
-    decoded_x = model.decode(z, compressed_shape)
-    for i, img in enumerate(data[:100]):
-        plt.imsave(f'data/original/{i}.png', np.squeeze(img, axis=-1), cmap='gray')
-    for i, img in enumerate(decoded_x[:100]):
-        plt.imsave(f'data/decoded/{i}.png', np.squeeze(img.numpy(), axis=-1), cmap='gray')
+        return history
 
+    def save_test_images(self, data):
+        mean_x, log_var_x, compressed_shape = self.model.encode(data)
 
-def clusterize(vae, samples, cluster_method, cluster_args):
-    # TODO: predict in batches
+        z = self.model.sample(mean_x, log_var_x)
+        decoded_x = self.model.decode(z, compressed_shape)
+        for i, img in enumerate(data[:100]):
+            plt.imsave(f'data/original/{i}.png', np.squeeze(img, axis=-1), cmap='gray')
+        for i, img in enumerate(decoded_x[:100]):
+            plt.imsave(f'data/decoded/{i}.png', np.squeeze(img.numpy(), axis=-1), cmap='gray')
 
-    if cluster_method not in clustering.CLUSTERING_METHODS:
-        raise Exception("cluster method must be one between " + ",".join(clustering.CLUSTERING_METHODS))
+    def compute_clusters(self, samples):
+        # TODO: predict in batches
 
-    z_mean, z_log_var, compressed_shape = vae.encode(samples)
-    features = vae.sample(z_mean, z_log_var)
+        if self.cluster_method not in clustering.CLUSTERING_METHODS:
+            raise Exception("cluster method must be one between " + ",".join(clustering.CLUSTERING_METHODS))
 
-    clustering_output = None
-    if cluster_method == "kmeans":
-        clustering_output = clustering.k_means(features, **cluster_args)
-    elif cluster_method == "dbscan":
-        clustering_output = clustering.dbscan(features, **cluster_args)
+        z_mean, z_log_var, compressed_shape = self.model.encode(samples)
+        features = self.model.sample(z_mean, z_log_var)
 
-    return clustering_output["labels"]
+        clustering_output = None
+        if self.cluster_method == "kmeans":
+            clustering_output = clustering.k_means(features, **self.cluster_args)
+        elif self.cluster_method == "dbscan":
+            clustering_output = clustering.dbscan(features, **self.cluster_args)
+
+        return clustering_output, features
 
 
 # -----------------------------------
 # Test
-
+'''
 inputs = import_image_np_dataset(config.IMAGES_PATH, (config.INPUT_SHAPE[0], config.INPUT_SHAPE[1]),
                                  config.RGB_NORMALIZATION)
 
@@ -241,5 +264,6 @@ print("Training completed!")
 
 
 print("Clustering launched...")
-clusters = clusterize(model, inputs, config.CLUSTERING_METHOD, cluster_args)
+clusters = compute_clusters(model, inputs, config.CLUSTERING_METHOD, cluster_args)
 print("Clustering completed!")
+'''
