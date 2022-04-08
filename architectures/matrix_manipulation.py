@@ -3,6 +3,7 @@
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import Normalizer
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 
 def normalize(x):
@@ -45,6 +46,14 @@ def compute_pca(x, n_components, apply_whitening):
 
     return principal_components, lost_variance_information
 
+def compute_lda(x, y, n_components):
+
+    lda = LinearDiscriminantAnalysis(n_components=n_components)
+    projected_data = lda.fit_transform(x,y)
+
+    lost_variance_information = 1-sum(lda.explained_variance_ratio_)
+
+    return projected_data, lost_variance_information
 
 def rgb_normalize(x):
     # Normalize the intervals of an rgb image from [0,255] to [0.0,1.0]

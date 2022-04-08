@@ -178,7 +178,7 @@ def train_model(model, data, epochs, batch_size):
                         verbose=1)
 
     # TODO: to remove, just for test.
-    save_test_images(data, model)
+    # save_test_images(data, model)
 
     return history
 
@@ -208,6 +208,8 @@ def clusterize(vae, samples, cluster_method, cluster_args):
         clustering_output = clustering.k_means(features, **cluster_args)
     elif cluster_method == "dbscan":
         clustering_output = clustering.dbscan(features, **cluster_args)
+
+    # visualizer.visualize_clusters(features, clustering_output["labels"])
 
     return clustering_output["labels"]
 
