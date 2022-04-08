@@ -1,5 +1,9 @@
 import tensorflow as tf
 
+SAVE_WEIGHTS = True
+LOAD_WEIGHTS = True
+WEIGHTS_PATH = os.path.join("architectures","weights","vae")
+
 STRIDE = 2
 KERNEL_SIZE = 3
 PADDING = "same"

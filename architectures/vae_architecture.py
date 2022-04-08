@@ -209,8 +209,6 @@ def clusterize(vae, samples, cluster_method, cluster_args):
     elif cluster_method == "dbscan":
         clustering_output = clustering.dbscan(features, **cluster_args)
 
-    # visualizer.visualize_clusters(features, clustering_output["labels"])
-
     return clustering_output["labels"]
 
 
