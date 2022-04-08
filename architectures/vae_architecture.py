@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers, metrics
+import os
 
 from architectures import clustering
 import architectures.vae_config as config
@@ -59,7 +60,6 @@ class Decoder(tf.keras.Model):
                                                              name=f'decoder_deconv_{i}')
                                       for i in range(n_conv_layers, 0, -1)]
 
-        # TODO: pass the number of channels as parameter!
         self.output_layer = layers.Conv2DTranspose(input_shape[2],
                                                    kernel_size,
                                                    padding="same",
@@ -180,7 +180,22 @@ class VAENet:
         self.cluster_method = cluster_dic['method']
         self.config = config
 
+        self.checkpoint_path = os.path.join(config.WEIGHTS_PATH, "checkpoint {} {}.ckpt".format(self.cluster_method, self.n_clusters))
+
         self.model = self.build_model(input_shape)
+
+        if config.LOAD_WEIGHTS:
+            if os.path.exists(self.checkpoint_path + ".index"):
+                print("Loading model's weights...")
+                self.model.load_weights(self.checkpoint_path)
+                print("Model's weights successfully loaded!")
+
+            else:
+                print("WARNING: model's weights not found, the model will be executed with initialized random weights.")
+                print("Ignore this warning if it is a test.")
+
+        self.model.summary()
+        print('NSCNet initialization completed.')
 
     def build_model(self, input_shape):
         model_input = tf.keras.Input(shape=input_shape)
@@ -197,9 +212,15 @@ class VAENet:
         return vae
 
     def train_model(self, data):
+
+        callbacks = []
+        if config.SAVE_WEIGHTS:
+            callbacks.append(tf.keras.callbacks.ModelCheckpoint(filepath=self.checkpoint_path, save_weights_only=True, verbose=1))
+
         history = self.model.fit(data,
                                  epochs=self.config.EPOCHS,
                                  batch_size=self.config.BATCH_SIZE,
+                                 callbacks=callbacks,
                                  verbose=1)
 
         # TODO: to remove, just for test.
