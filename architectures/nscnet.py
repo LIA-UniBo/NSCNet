@@ -2,11 +2,11 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
 
-from pseudo_labels_generator import Generator
-from images_loader import import_image_np_dataset
-from arcface_layer import ArcFace
+from architectures.arcface_layer import ArcFace
+from architectures.images_loader import import_image_np_dataset
+from architectures.pseudo_labels_generator import Generator
+import architectures.nscnet_config as config
 
-import nscnet_config as config
 
 class ConvNet(tf.keras.Model):
 

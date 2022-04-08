@@ -1,24 +1,25 @@
-#In this module there are all the functions that are used to do some algebric operations on matrices
-
-import numpy as np
+# In this module there are all the functions that are used to do some algebric operations on matrices
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import Normalizer
 
+
 def normalize(x):
 
-    #Normalize a matrix to have mean=0 and std=1
+    # Normalize a matrix to have mean=0 and std=1
 
     normalized_x = StandardScaler().fit_transform(x)
     return normalized_x
 
+
 def l2_normalize(x):
 
-    #Apply the l2-normalization
+    # Apply the l2-normalization
 
     l2_normalized_x = Normalizer(norm='l2').fit_transform(x)
     return l2_normalized_x
+
 
 def compute_pca(x, n_components, apply_whitening):
 
@@ -44,8 +45,8 @@ def compute_pca(x, n_components, apply_whitening):
 
     return principal_components, lost_variance_information
 
-def rgb_normalize(x):
 
-    #Normalize the intervals of an rgb image from [0,255] to [0.0,1.0]
+def rgb_normalize(x):
+    # Normalize the intervals of an rgb image from [0,255] to [0.0,1.0]
 
     return x/255

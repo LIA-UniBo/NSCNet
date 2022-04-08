@@ -6,10 +6,8 @@ import time
 import tensorflow as tf
 from sklearn.metrics.cluster import normalized_mutual_info_score as nmi
 
-import matrix_manipulation
-import clustering
-import spec_augmentation
-from uniform_cluster_sampler import ClusterSampler
+from architectures import matrix_manipulation, clustering, spec_augmentation
+from architectures.uniform_cluster_sampler import ClusterSampler
 
 
 class Generator(tf.keras.utils.Sequence):
@@ -73,7 +71,6 @@ class Generator(tf.keras.utils.Sequence):
     def __len__(self):
 
         # Return the number of batches for training
-
         return math.ceil(len(self.x) / self.batch_size)
 
     def __getitem__(self, idx):
@@ -122,7 +119,6 @@ class Generator(tf.keras.utils.Sequence):
         """
         Extract the features and apply a clustering algorithm to get the new pseudo-labels
         """
-
         start_time = time.time()
 
         if self.verbose:
@@ -162,7 +158,8 @@ class Generator(tf.keras.utils.Sequence):
         pca_n_components = self.features_extraction_options["pca"]
         apply_whitening = self.features_extraction_options["whiten"]
         if pca_n_components is not None:
-            features, lost_variance_information = matrix_manipulation.compute_pca(features, pca_n_components,
+            features, lost_variance_information = matrix_manipulation.compute_pca(features,
+                                                                                  pca_n_components,
                                                                                   apply_whitening)
 
         # L2-normalize
@@ -179,8 +176,10 @@ class Generator(tf.keras.utils.Sequence):
 
         # Compute the Normalized Mutual Information between old and new pseudo-labels
         nmi_score = nmi(old_y, new_y)
+
         # Update history of metrics
         self.nmi_scores.append(nmi_score)
+
         if self.verbose:
             print("NMI score: {}".format(nmi_score))
 

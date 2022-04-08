@@ -1,8 +1,10 @@
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras import layers, metrics
 
 from architectures import clustering
-from architectures.vae_config import *
+import architectures.vae_config as config
+import matplotlib.pyplot as plt
 
 from architectures.images_loader import import_image_np_dataset
 
@@ -213,31 +215,31 @@ def clusterize(vae, samples, cluster_method, cluster_args):
 # -----------------------------------
 # Test
 
-inputs = import_image_np_dataset(IMAGES_PATH, (INPUT_SHAPE[0], INPUT_SHAPE[1]),
-                                 RGB_NORMALIZATION)
+inputs = import_image_np_dataset(config.IMAGES_PATH, (config.INPUT_SHAPE[0], config.INPUT_SHAPE[1]),
+                                 config.RGB_NORMALIZATION)
 
 
 cluster_args = {
-    "n_clusters": N_CLUSTERS
+    "n_clusters": config.N_CLUSTERS
 }
 
-model = build_model(INPUT_SHAPE,
-                    STRIDE,
-                    KERNEL_SIZE,
-                    PADDING,
-                    STARTING_FILTERS,
-                    LATENT_DIM,
-                    N_CONV_LAYERS,
-                    OPTIMIZER)
+model = build_model(config.INPUT_SHAPE,
+                    config.STRIDE,
+                    config.KERNEL_SIZE,
+                    config.PADDING,
+                    config.STARTING_FILTERS,
+                    config.LATENT_DIM,
+                    config.N_CONV_LAYERS,
+                    config.OPTIMIZER)
 
 model.summary(expand_nested=True)
 
 
 print("Training launched...")
-history = train_model(model, inputs, EPOCHS, BATCH_SIZE)
+history = train_model(model, inputs, config.EPOCHS, config.BATCH_SIZE)
 print("Training completed!")
 
 
 print("Clustering launched...")
-clusters = clusterize(model, inputs, CLUSTERING_METHOD, cluster_args)
+clusters = clusterize(model, inputs, config.CLUSTERING_METHOD, cluster_args)
 print("Clustering completed!")

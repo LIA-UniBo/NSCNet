@@ -1,7 +1,7 @@
-#This module contains constants
+# This module contains constants
 
 import tensorflow as tf
-import spec_augmentation
+from architectures import spec_augmentation
 
 POST_PROCESSING_OPTIONS = {
     "normalize": True,
