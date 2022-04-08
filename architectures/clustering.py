@@ -1,5 +1,6 @@
 # This module works as an interface for the sklearn to apply a clustering algorithm
 
+import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import DBSCAN
@@ -46,7 +47,7 @@ def k_means(x, n_clusters, max_iterations=300, batch_size=None):
     return {"labels": kmeans.labels_, "silhouette": silhouette_avg, "inertia": kmeans.inertia_}
 
 
-def dbscan(x, eps, min_samples, metric="euclidean"):
+def dbscan(x, eps, min_samples, metric="euclidean", **kwargs):
     """
     Computes the DBSCAN algorithm.
 
@@ -66,10 +67,15 @@ def dbscan(x, eps, min_samples, metric="euclidean"):
     dbscan_clustering = DBSCAN(eps=eps,
                                min_samples=min_samples,
                                metric=metric,
-                               n_jobs=-1)
+                               n_jobs=None)
 
     # Make predictions and compute the metrics
     cluster_predictions = dbscan_clustering.fit_predict(x)
-    silhouette_avg = silhouette_score(x, cluster_predictions)
+
+    # TODO: noise must be properly treated
+    cluster_predictions[cluster_predictions < 0] = 0
+    silhouette_avg = 0
+    if len(np.unique(cluster_predictions)) > 1:
+        silhouette_avg = silhouette_score(x, cluster_predictions)
 
     return {"labels": dbscan_clustering.labels_, "silhouette": silhouette_avg}
