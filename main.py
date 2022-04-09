@@ -3,7 +3,7 @@ import time
 import config
 
 import matplotlib.pyplot as plt
-from train.network_trainer import NSCNetTrainer, VAENetTrainer
+from train.network_trainer import NSCNetTrainer, VAENetTrainer, BASENetTrainer
 from architectures.images_loader import import_image_np_dataset
 
 
@@ -44,9 +44,12 @@ if __name__ == '__main__':
     nscnet_trainer = NSCNetTrainer()
     nscnet_trainer.kmeans(inputs)
     nscnet_trainer.dbscan(inputs)
-    '''
 
     vaenet_trainer = VAENetTrainer()
-    # vaenet_trainer.kmeans(inputs)
+    vaenet_trainer.kmeans(inputs)
     vaenet_trainer.dbscan(inputs)
+    '''
 
+    basenet_trainer = BASENetTrainer()
+    basenet_trainer.kmeans(inputs)
+    basenet_trainer.dbscan(inputs)

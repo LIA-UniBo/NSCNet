@@ -1,5 +1,3 @@
-RGB_NORMALIZATION = True
-
 COMPRESSION_PROCESSING_OPTIONS = {
     "normalize": True,
     "pca": 128,
@@ -7,9 +5,12 @@ COMPRESSION_PROCESSING_OPTIONS = {
     "l2_normalize": True
 }
 
-IMAGES_PATH = "Samples"
 
-INPUT_SHAPE = (28,28)
 
+'''
+RGB_NORMALIZATION = True
 CLUSTERING_METHOD = "kmeans"
 N_CLUSTERS = 10
+IMAGES_PATH = "Samples"
+INPUT_SHAPE = (28,28)
+'''

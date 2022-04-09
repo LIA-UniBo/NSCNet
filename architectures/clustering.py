@@ -74,6 +74,7 @@ def dbscan(x, eps, min_samples, metric="euclidean", **kwargs):
 
     # TODO: noise must be properly treated
     cluster_predictions[cluster_predictions < 0] = 0
+
     silhouette_avg = 0
     if len(np.unique(cluster_predictions)) > 1:
         silhouette_avg = silhouette_score(x, cluster_predictions)

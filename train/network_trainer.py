@@ -5,6 +5,7 @@ import itertools
 
 import numpy as np
 
+from architectures.baseline import BaseNet
 from architectures.nscnet import NSCNet
 from architectures.vae_architecture import VAENet
 from architectures.visualizer import visualize_clusters
@@ -113,6 +114,8 @@ class BASENetTrainer(NetworkTrainer):
     def __init__(self, result_dir='train/results'):
         super().__init__('BASENet', result_dir)
 
-    def train(self, K, cluster_args, inputs, method):
-        # TODO: init Baseline architecture and train it
-        pass
+    def train(self, cluster_args, inputs, method):
+
+        basenet = BaseNet(cluster_args)
+        clustering_output, features = basenet.clusterize(inputs)
+        self.save_training_results(cluster_args['config'], clustering_output, features, method)
