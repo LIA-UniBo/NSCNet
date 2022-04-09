@@ -68,10 +68,10 @@ class NetworkTrainer:
 
     def _save_training_results(self, cluster_args, clustering_output, features, clustering_method):
 
-        # Save also cluster parameters
+        # Save clustering parameters along with the results received from the clustering algorithm
         clustering_output.update(cluster_args)
 
-        # Adapt the content of the clustering_output so it can be saved as a json
+        # Adapt the content of the clustering_output so it can be saved as a json (readability purpose)
         for elem in clustering_output:
             if isinstance(clustering_output[elem], np.float32):
                 clustering_output[elem] = float(clustering_output[elem])
@@ -111,29 +111,31 @@ class NetworkTrainer:
                     eps.append(json_dic['eps'])
                     min_samples.append(json_dic['eps'])
 
-        # Sort by K
-        k, silhouette = zip(*sorted(zip(k, silhouette)))
+        # Sort values
+        k, silhouette_k = zip(*sorted(zip(k, silhouette)))
+        eps, silhouette_eps = zip(*sorted(zip(eps, silhouette)))
+        min_samples, silhouette_min_samples = zip(*sorted(zip(min_samples, silhouette)))
 
         # Create the plots
         fig = plt.figure(figsize=(10, 10))
 
         ax1 = fig.add_subplot(3, 1, 1)
         ax1.title.set_text('K - SILHOUETTE')
-        ax1.plot(k, silhouette)
-        ax1.set_ylabel('SILHOUETTE')
+        ax1.plot(k, silhouette_k)
         ax1.set_xlabel('K')
+        ax1.set_ylabel('SILHOUETTE')
 
         ax2 = fig.add_subplot(3, 1, 2)
         ax2.title.set_text('EPS - SILOHUETTE')
-        ax2.plot(eps, silhouette)
-        ax2.set_ylabel('SILHOUETTE')
+        ax2.plot(eps, silhouette_eps)
         ax2.set_xlabel('EPS')
+        ax2.set_ylabel('SILHOUETTE')
 
         ax3 = fig.add_subplot(3, 1, 3)
         ax3.title.set_text('MIN_SAMPLES - SILOHUETTE')
-        ax3.plot(min_samples, silhouette)
-        ax3.set_ylabel('SILHOUETTE')
+        ax3.plot(min_samples, silhouette_min_samples)
         ax3.set_xlabel('MIN_SAMPLES')
+        ax3.set_ylabel('SILHOUETTE')
 
         fig.subplots_adjust(hspace=0.5)
 
