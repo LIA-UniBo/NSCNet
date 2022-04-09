@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import DBSCAN
-from sklearn.metrics import silhouette_score  # , silhouette_samples
+from sklearn.metrics import silhouette_score, silhouette_samples
 
 CLUSTERING_METHODS = ["kmeans", "dbscan"]
 
@@ -43,8 +43,14 @@ def k_means(x, n_clusters, max_iterations=300, batch_size=None):
     # Make predictions and compute the metrics
     cluster_predictions = kmeans.fit_predict(x)
     silhouette_avg = silhouette_score(x, cluster_predictions)
+    silhouette_sample_scores = silhouette_samples(x, cluster_predictions)
 
-    return {"labels": kmeans.labels_, "silhouette": silhouette_avg, "inertia": kmeans.inertia_}
+    return {
+        "labels": kmeans.labels_,
+        "silhouette": silhouette_avg,
+        "silhouette_sample_scores": silhouette_sample_scores,
+        "inertia": kmeans.inertia_
+    }
 
 
 def dbscan(x, eps, min_samples, metric="euclidean", **kwargs):
@@ -76,7 +82,13 @@ def dbscan(x, eps, min_samples, metric="euclidean", **kwargs):
     cluster_predictions[cluster_predictions < 0] = 0
 
     silhouette_avg = 0
+    silhouette_sample_scores = np.zeros(len(cluster_predictions))
     if len(np.unique(cluster_predictions)) > 1:
         silhouette_avg = silhouette_score(x, cluster_predictions)
+        silhouette_sample_scores = silhouette_samples(x, cluster_predictions)
 
-    return {"labels": dbscan_clustering.labels_, "silhouette": silhouette_avg}
+    return {
+        "labels": dbscan_clustering.labels_,
+        "silhouette": silhouette_avg,
+        "silhouette_sample_scores": silhouette_sample_scores
+    }
