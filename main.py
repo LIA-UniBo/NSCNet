@@ -53,3 +53,4 @@ if __name__ == '__main__':
     basenet_trainer = BASENetTrainer()
     basenet_trainer.kmeans(inputs)
     basenet_trainer.dbscan(inputs)
+    # basenet_trainer._save_training_plots('dbscan')

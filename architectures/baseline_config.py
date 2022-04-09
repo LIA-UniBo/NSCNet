@@ -5,8 +5,6 @@ COMPRESSION_PROCESSING_OPTIONS = {
     "l2_normalize": True
 }
 
-
-
 '''
 RGB_NORMALIZATION = True
 CLUSTERING_METHOD = "kmeans"

@@ -42,6 +42,7 @@ class BaseNet:
 
         return clustering_output, features
 
+
 '''
 # ----------------------------------------------
 # Test
