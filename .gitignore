@@ -10,9 +10,7 @@
 __pycache__/
 data/
 results/
-
-!data/.gitkeep
-!results/.gitkeep
+architectures/weights/
 
 # User-specific stuff
 .idea/**/workspace.xml
