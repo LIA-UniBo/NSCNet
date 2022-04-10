@@ -3,11 +3,9 @@ import tensorflow as tf
 from tensorflow.keras import layers, metrics
 import os
 
-from architectures import clustering
-import architectures.vae_config as config
+from architectures.common import clustering
+import architectures.vaenet.vaenet_config as config
 import matplotlib.pyplot as plt
-
-from architectures.images_loader import import_image_np_dataset
 
 
 class Encoder(tf.keras.Model):

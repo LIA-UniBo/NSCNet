@@ -3,8 +3,8 @@ import time
 import config
 
 import matplotlib.pyplot as plt
-from train.network_trainer import NSCNetTrainer, VAENetTrainer, BASENetTrainer
-from architectures.images_loader import import_image_np_dataset
+from train.network_trainer import BASENetTrainer, NSCNetTrainer, VAENetTrainer
+from architectures.common.images_loader import import_image_np_dataset
 
 
 def create_required_folders():
@@ -40,7 +40,6 @@ if __name__ == '__main__':
 
     inputs = create_inputs(dummy_dataset=True)
 
-    '''
     nscnet_trainer = NSCNetTrainer()
     nscnet_trainer.kmeans(inputs)
     nscnet_trainer.dbscan(inputs)
@@ -48,7 +47,6 @@ if __name__ == '__main__':
     vaenet_trainer = VAENetTrainer()
     vaenet_trainer.kmeans(inputs)
     vaenet_trainer.dbscan(inputs)
-    '''
 
     basenet_trainer = BASENetTrainer()
     basenet_trainer.kmeans(inputs)

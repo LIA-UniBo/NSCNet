@@ -17,8 +17,3 @@ OPTIMIZER = tf.keras.optimizers.Adam(LEARNING_RATE)
 BATCH_SIZE = 32
 EPOCHS = 1
 
-# RGB_NORMALIZATION = True
-# N_CLUSTERS = 20  # Test value
-# CLUSTERING_METHOD = "kmeans"
-# IMAGES_PATH = "data"
-# INPUT_SHAPE = (64, 512, 3)

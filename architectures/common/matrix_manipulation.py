@@ -46,6 +46,7 @@ def compute_pca(x, n_components, apply_whitening):
 
     return principal_components, lost_variance_information
 
+
 def compute_lda(x, y, n_components):
 
     lda = LinearDiscriminantAnalysis(n_components=n_components)

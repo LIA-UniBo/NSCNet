@@ -6,15 +6,16 @@ import time
 import tensorflow as tf
 from sklearn.metrics.cluster import normalized_mutual_info_score as nmi
 
-from architectures import matrix_manipulation, clustering, spec_augmentation
-from architectures.uniform_cluster_sampler import ClusterSampler
+from architectures.common import clustering, matrix_manipulation, spec_augmentation
+from architectures.nscnet.uniform_cluster_sampler import ClusterSampler
 
 
 class Generator(tf.keras.utils.Sequence):
 
     def __init__(self, x, batch_size, conv_net_model, features_extraction_options,
                  spec_augmentation_options, early_stopping_options, cluster_method,
-                 cluster_args, shuffle=True, verbose=True, custom_sampler=True):
+                 cluster_args, shuffle=True, verbose=True, custom_sampler=True,
+                 generate_label_on_init=True):
 
         """
         Parameters:
@@ -39,6 +40,8 @@ class Generator(tf.keras.utils.Sequence):
         shuffle: determine to shuffle to input or not
         verbose: log some info if True
         custom_sampler: decide to use the custom sampler to prepare the batches or not
+        generate_label_on_init: always when training a network. Just put it to false for manually genererating the
+            pseudo-labels
         """
 
         if cluster_method not in clustering.CLUSTERING_METHODS:
@@ -60,8 +63,9 @@ class Generator(tf.keras.utils.Sequence):
             np.random.shuffle(self.x)
 
         # Create the first random labels to start the training
-        clustering_result, _ = self.generate_pseudo_labels()
-        self.y = clustering_result["labels"]
+        if generate_label_on_init:
+            clustering_result, _ = self.generate_pseudo_labels()
+            self.y = clustering_result["labels"]
         self.nmi_scores = []
 
         # Divide the samples in different lists depending on their labels

@@ -1,7 +1,7 @@
-import numpy as np
-import architectures.baseline_config as config
-from architectures import matrix_manipulation, clustering
+import architectures.basenet.basenet_config as config
+from architectures.common import clustering, matrix_manipulation
 
+import numpy as np
 
 class BaseNet:
 
@@ -27,12 +27,20 @@ class BaseNet:
 
         return data
 
-    def clusterize(self, data):
+    def compute_clusters(self, data):
 
         if self.cluster_method not in clustering.CLUSTERING_METHODS:
             raise Exception("cluster method must be one between " + ",".join(clustering.CLUSTERING_METHODS))
 
         features = self.compress_data(data, **config.COMPRESSION_PROCESSING_OPTIONS)
+
+        # neighbors = NearestNeighbors(n_neighbors=5)
+        # neighbors_fit = neighbors.fit(features)
+        # distances, indices = neighbors_fit.kneighbors(features)
+        # distances = np.sort(distances, axis=0)
+        # distances = distances[:, 1]
+        # plt.plot(distances)
+        # plt.show(block=True)
 
         clustering_output = None
         if self.cluster_method == "kmeans":

@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from architectures.uniform_cluster_sampler import ClusterSampler
+from architectures.nscnet.uniform_cluster_sampler import ClusterSampler
 import numpy as np
 
 

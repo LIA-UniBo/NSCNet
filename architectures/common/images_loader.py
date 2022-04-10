@@ -3,7 +3,7 @@
 import tensorflow as tf
 import numpy as np
 
-from architectures import matrix_manipulation
+from architectures.common import matrix_manipulation
 
 
 def import_image_tf_dataset(path, batch_size, input_shape, shuffle=True):

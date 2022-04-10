@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from architectures.matrix_manipulation import compute_pca, compute_lda, normalize
+from architectures.common.matrix_manipulation import compute_pca, compute_lda, normalize
 
 
 def visualize_data(data):

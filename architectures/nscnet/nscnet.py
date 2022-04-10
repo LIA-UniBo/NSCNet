@@ -2,9 +2,9 @@ import tensorflow as tf
 from tensorflow.keras import layers
 import os
 
-from architectures.arcface_layer import ArcFace
-import architectures.nscnet_config as config
-from architectures.pseudo_labels_generator import Generator
+from architectures.nscnet.arcface_layer import ArcFace
+import architectures.nscnet.nscnet_config as config
+from architectures.nscnet.pseudo_labels_generator import Generator
 
 
 class ConvNet(tf.keras.Model):
@@ -117,6 +117,7 @@ class NSCNet:
         return history
 
     def compute_clusters(self, inputs):
+
         generator = Generator(inputs,
                               config.BATCH_SIZE,
                               self.model.conv_net,
@@ -126,7 +127,8 @@ class NSCNet:
                               self.cluster_method,
                               self.cluster_args,
                               shuffle=False,
-                              custom_sampler=False)
+                              custom_sampler=False,
+                              generate_label_on_init=False)
 
         return generator.generate_pseudo_labels()
 

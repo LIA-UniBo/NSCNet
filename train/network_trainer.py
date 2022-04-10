@@ -8,10 +8,14 @@ import numpy as np
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 
-from architectures.baseline import BaseNet
-from architectures.nscnet import NSCNet
-from architectures.vae_architecture import VAENet
-from architectures.visualizer import visualize_clusters
+from architectures.basenet.basenet import BaseNet
+from architectures.nscnet.nscnet import NSCNet
+from architectures.vaenet.vaenet import VAENet
+from architectures.common.visualizer import visualize_clusters
+
+# import matplotlib
+
+# matplotlib.use('Agg')
 
 
 class NetworkTrainer:
@@ -25,12 +29,18 @@ class NetworkTrainer:
 
         config_list = list(itertools.product(config.EPS_VALUES, config.MIN_SAMPLES, config.N_POSSIBLE_CLUSTERS))
         for eps, min_samples, K in config_list:
+            print('*' * 40)
+            print(f'CLUSTERING METHOD: {method}')
+            print(f'eps: {eps} - min_samples: {min_samples}')
+            print('*' * 40)
+
             cluster_args = {
                 'config': {
                     "eps": eps,
                     "min_samples": min_samples,
                     "metric": "euclidean",
-                    "n_clusters": K
+                    "compute_scores": False,
+                    "n_clusters": K,
                 },
                 "n_clusters": K,
                 "method": method
@@ -41,18 +51,21 @@ class NetworkTrainer:
         # Save plots
         self._save_dbscan_training_plots(method)
 
+        print('Training completed.\n\n')
+
     def kmeans(self, inputs):
         method = 'kmeans'
 
         for K in config.N_POSSIBLE_CLUSTERS:
             print('*' * 40)
             print(f'CLUSTERING METHOD: {method}')
-            print(f'TRAINING THE NETWORK WITH {K} CLUSTERS')
+            print(f'k: {K}')
             print('*' * 40)
 
             cluster_args = {
                 'config': {
-                    "n_clusters": K
+                    "n_clusters": K,
+                    "compute_scores": False
                 },
                 "n_clusters": K,
                 "method": method
@@ -62,6 +75,8 @@ class NetworkTrainer:
 
         # Save plots
         self._save_kmeans_training_plots(method)
+
+        print('Training completed.\n\n')
 
     @abc.abstractmethod
     def train(self, **kwargs):
@@ -102,6 +117,8 @@ class NetworkTrainer:
         silhouette = []
         eps = []
         min_samples = []
+        silhouette_sample_scores = []
+        cluster_labels = []
 
         for file in os.listdir(self.results_dir):
             if file.startswith(f'{self.network_name}_{clustering_method_name}') and file.endswith('json'):
@@ -110,33 +127,44 @@ class NetworkTrainer:
                     k.append(json_dic['n_clusters'])
                     silhouette.append(json_dic['silhouette'])
                     eps.append(json_dic['eps'])
-                    min_samples.append(json_dic['eps'])
+                    min_samples.append(json_dic['min_samples'])
+                    silhouette_sample_scores.append(json_dic['silhouette_sample_scores'])
+                    cluster_labels.append(json_dic['labels'])
 
-        # Sort values
+        # Sort values by k, eps and min_samples
         k, silhouette_k = zip(*sorted(zip(k, silhouette)))
         eps, silhouette_eps = zip(*sorted(zip(eps, silhouette)))
         min_samples, silhouette_min_samples = zip(*sorted(zip(min_samples, silhouette)))
 
+        dbscan_clusters = [len(np.unique(dbscan_clusters)) for dbscan_clusters in cluster_labels]
+
+
         # Create the plots
         fig = plt.figure(figsize=(10, 10))
 
-        ax1 = fig.add_subplot(3, 1, 1)
+        ax1 = fig.add_subplot(4, 1, 1)
         ax1.title.set_text('K - SILHOUETTE')
         ax1.plot(k, silhouette_k)
         ax1.set_xlabel('K')
         ax1.set_ylabel('SILHOUETTE')
 
-        ax2 = fig.add_subplot(3, 1, 2)
+        ax2 = fig.add_subplot(4, 1, 2)
         ax2.title.set_text('EPS - SILOHUETTE')
         ax2.plot(eps, silhouette_eps)
         ax2.set_xlabel('EPS')
         ax2.set_ylabel('SILHOUETTE')
 
-        ax3 = fig.add_subplot(3, 1, 3)
+        ax3 = fig.add_subplot(4, 1, 3)
         ax3.title.set_text('MIN_SAMPLES - SILOHUETTE')
         ax3.plot(min_samples, silhouette_min_samples)
         ax3.set_xlabel('MIN_SAMPLES')
         ax3.set_ylabel('SILHOUETTE')
+
+        ax4 = fig.add_subplot(4, 1, 4)
+        ax4.title.set_text('K - DBSCAN CLUSTERS')
+        ax4.plot(k, dbscan_clusters)
+        ax4.set_xlabel('K')
+        ax4.set_ylabel('DBSCAN CLUSTERS')
 
         fig.subplots_adjust(hspace=0.5)
 
@@ -146,13 +174,19 @@ class NetworkTrainer:
         plt.savefig(file_path, bbox_inches='tight')
         plt.close(fig)
 
+        self._create_silhouette_samples_plot(cluster_labels,
+                                             silhouette_sample_scores,
+                                             clustering_method_name,
+                                             k,
+                                             silhouette)
+
     def _save_kmeans_training_plots(self, clustering_method_name):
 
         k = []
         silhouette = []
         inertia = []
-        all_silhouette_sample_scores = []
-        all_cluster_labels = []
+        silhouette_sample_scores = []
+        cluster_labels = []
 
         for file in os.listdir(self.results_dir):
             if file.startswith(f'{self.network_name}_{clustering_method_name}') and file.endswith('json'):
@@ -161,12 +195,12 @@ class NetworkTrainer:
                     k.append(json_dic['n_clusters'])
                     silhouette.append(json_dic['silhouette'])
                     inertia.append(json_dic['inertia'])
-                    all_silhouette_sample_scores.append(json_dic['silhouette_sample_scores'])
-                    all_cluster_labels.append(json_dic['labels'])
+                    silhouette_sample_scores.append(json_dic['silhouette_sample_scores'])
+                    cluster_labels.append(json_dic['labels'])
 
         # Sort by K
-        k, inertia, silhouette, all_silhouette_sample_scores, all_cluster_labels = zip(
-            *sorted(zip(k, inertia, silhouette, all_silhouette_sample_scores, all_cluster_labels)))
+        k, inertia, silhouette, silhouette_sample_scores, cluster_labels = zip(
+            *sorted(zip(k, inertia, silhouette, silhouette_sample_scores, cluster_labels)))
 
         # Create the plots
         fig = plt.figure(figsize=(10, 10))
@@ -188,32 +222,35 @@ class NetworkTrainer:
         plt.savefig(file_path, bbox_inches='tight')
         plt.close(fig)
 
-        '''
-        fig = plt.figure(figsize=(10, 10))
+        self._create_silhouette_samples_plot(cluster_labels,
+                                             silhouette_sample_scores,
+                                             clustering_method_name,
+                                             k,
+                                             silhouette)
 
-        for idx, i in enumerate(k):
+    def _create_silhouette_samples_plot(self, cluster_labels, silhouette_sample_scores, clustering_method_name,
+                                        k, silhouette):
+        fig, subplots = plt.subplots(len(k), 1, gridspec_kw={'height_ratios': k}, figsize=(6.5, 0.8 * sum(k)))
+        for idx, n_current_cluster in enumerate(k):
 
-            ax1 = fig.add_subplot(len(k), 1, idx+1)
+            subplot = subplots[idx]
 
-            sample_silhouette_values = np.asarray(all_silhouette_sample_scores[idx])
-            cluster_labels = np.asarray(all_cluster_labels[idx])
+            ith_sample_silhouette_values = np.asarray(silhouette_sample_scores[idx])
+            ith_cluster_labels = np.asarray(cluster_labels[idx])
             silhouette_avg = np.asarray(silhouette[idx])
 
             y_lower = 10
             cluster_sizes = []
-            for n in range(i):
-                # Aggregate the silhouette scores for samples belonging to
-                # cluster i, and sort them
-                ith_cluster_silhouette_values = sample_silhouette_values[cluster_labels == n]
-
+            for n in range(n_current_cluster):
+                # Aggregate the silhouette scores for samples belonging to cluster n_current_cluster, and sort them
+                ith_cluster_silhouette_values = ith_sample_silhouette_values[ith_cluster_labels == n]
                 ith_cluster_silhouette_values.sort()
 
                 size_cluster_i = ith_cluster_silhouette_values.shape[0]
                 y_upper = y_lower + size_cluster_i
-                print(y_upper)
 
-                color = cm.nipy_spectral(float(n) / i)
-                ax1.fill_betweenx(
+                color = cm.nipy_spectral(float(n) / n_current_cluster)
+                subplot.fill_betweenx(
                     np.arange(y_lower, y_upper),
                     0,
                     ith_cluster_silhouette_values,
@@ -223,31 +260,33 @@ class NetworkTrainer:
                 )
 
                 # Label the silhouette plots with their cluster numbers at the middle
-                ax1.text(-0.05, y_lower + 0.5 * size_cluster_i, str(n))
+                subplot.text(-0.05, y_lower + 0.5 * size_cluster_i, str(n))
 
                 # Compute the new y_lower for next plot
-                y_lower = y_upper + 10  # 10 for the 0 samples
+                y_lower = y_upper + 10
 
                 cluster_sizes.append(size_cluster_i)
 
-            print(f'variance with {i} clusters is: {np.var(cluster_sizes)}, silhouette_index: {silhouette_avg}')
+            # print(f'variance with {n_current_cluster}
+            # clusters is: {np.var(cluster_sizes)}, silhouette_index: {silhouette_avg}')
 
-            ax1.set_title("The silhouette plot for the various clusters.")
-            ax1.set_xlabel("The silhouette coefficient values")
-            ax1.set_ylabel("Cluster label")
+            subplot.set_title("SILHOUETTE SAMPLES")
+            subplot.set_xlabel("Silhouette")
+            subplot.set_ylabel("Cluster")
 
-            ax1.set_title("The silhouette plot for the various clusters.")
-            ax1.set_xlabel("The silhouette coefficient values")
-            ax1.set_ylabel("Cluster label")
+            # Draw the average silhouette
+            subplot.axvline(x=silhouette_avg, color="red", linestyle="--")
 
-            # The vertical line for average silhouette score of all the values
-            ax1.axvline(x=silhouette_avg, color="red", linestyle="--")
-
-            ax1.set_yticks([])  # Clear the yaxis labels / ticks
-            ax1.set_xticks([-0.1, 0, 0.2, 0.4, 0.6, 0.8, 1])
-
-        plt.show(block=True)
-        '''
+            # Set axis ticks
+            subplot.set_yticks([])
+            subplot.set_xticks([-0.1, 0, 0.2, 0.4, 0.6, 0.8, 1])
+        # Reduce vertical spacing between subplots
+        fig.subplots_adjust(hspace=0.05)
+        # Save to file system
+        file_name = f'{self.network_name}_{clustering_method_name}_SILHOUETTE_PLOTS.png'
+        file_path = os.path.join(self.results_dir, file_name)
+        plt.savefig(file_path, bbox_inches='tight')
+        plt.close(fig)
 
 
 class NSCNetTrainer(NetworkTrainer):
@@ -258,6 +297,8 @@ class NSCNetTrainer(NetworkTrainer):
     def train(self, cluster_args, inputs, method):
         nscnet = NSCNet(config.INPUT_SHAPE, cluster_args)
         nscnet.train_model(inputs)
+
+        nscnet.cluster_args['compute_scores'] = True
         clustering_output, features = nscnet.compute_clusters(inputs)
         self._save_training_results(cluster_args['config'], clustering_output, features, method)
 
@@ -270,6 +311,8 @@ class VAENetTrainer(NetworkTrainer):
     def train(self, cluster_args, inputs, method):
         vaenet = VAENet(config.INPUT_SHAPE, cluster_args)
         vaenet.train_model(inputs)
+
+        vaenet.cluster_args['compute_scores'] = True
         clustering_output, features = vaenet.compute_clusters(inputs)
         self._save_training_results(cluster_args['config'], clustering_output, features, method)
 
@@ -280,6 +323,9 @@ class BASENetTrainer(NetworkTrainer):
         super().__init__('BASENet', result_dir)
 
     def train(self, cluster_args, inputs, method):
+
         basenet = BaseNet(cluster_args)
-        clustering_output, features = basenet.clusterize(inputs)
+
+        basenet.cluster_args['compute_scores'] = True
+        clustering_output, features = basenet.compute_clusters(inputs)
         self._save_training_results(cluster_args['config'], clustering_output, features, method)

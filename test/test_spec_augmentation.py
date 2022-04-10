@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from architectures.spec_augmentation import time_warp
+from architectures.common.spec_augmentation import time_warp
 
 
 class TestSpecAugmentation(TestCase):

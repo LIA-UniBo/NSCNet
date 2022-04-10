@@ -1,7 +1,7 @@
 # This module works as an interface for the sklearn to apply a clustering algorithm
 
 import numpy as np
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, OPTICS
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import DBSCAN
 from sklearn.metrics import silhouette_score, silhouette_samples
@@ -9,7 +9,7 @@ from sklearn.metrics import silhouette_score, silhouette_samples
 CLUSTERING_METHODS = ["kmeans", "dbscan"]
 
 
-def k_means(x, n_clusters, max_iterations=300, batch_size=None):
+def k_means(x, n_clusters, max_iterations=300, batch_size=None, compute_scores=False, **kwargs):
     """
     This method computes the k-means clustering in a classical (iterative) form or with the mini-batch approach.
 
@@ -40,20 +40,27 @@ def k_means(x, n_clusters, max_iterations=300, batch_size=None):
                                  batch_size=batch_size,
                                  max_iter=max_iterations).fit_predict(x)
 
-    # Make predictions and compute the metrics
+    silhouette_avg = None
+    silhouette_sample_scores = None
+
+    # Make predictions
     cluster_predictions = kmeans.fit_predict(x)
-    silhouette_avg = silhouette_score(x, cluster_predictions)
-    silhouette_sample_scores = silhouette_samples(x, cluster_predictions)
+
+    # Compute additional metric scores if required
+    if compute_scores:
+        silhouette_avg = silhouette_score(x, cluster_predictions)
+        silhouette_sample_scores = silhouette_samples(x, cluster_predictions)
 
     return {
-        "labels": kmeans.labels_,
+        "labels": cluster_predictions,
         "silhouette": silhouette_avg,
         "silhouette_sample_scores": silhouette_sample_scores,
         "inertia": kmeans.inertia_
     }
 
 
-def dbscan(x, eps, min_samples, metric="euclidean", **kwargs):
+def dbscan(x, eps, min_samples, metric="euclidean", compute_scores=False, **kwargs):
+
     """
     Computes the DBSCAN algorithm.
 
@@ -75,20 +82,32 @@ def dbscan(x, eps, min_samples, metric="euclidean", **kwargs):
                                metric=metric,
                                n_jobs=None)
 
+    '''
+    dbscan_clustering = OPTICS(
+                               min_samples=min_samples,
+                               metric=metric,
+                               n_jobs=None)
+    '''
+
     # Make predictions and compute the metrics
     cluster_predictions = dbscan_clustering.fit_predict(x)
 
     # TODO: noise must be properly treated
     cluster_predictions[cluster_predictions < 0] = 0
 
-    silhouette_avg = 0
-    silhouette_sample_scores = np.zeros(len(cluster_predictions))
-    if len(np.unique(cluster_predictions)) > 1:
-        silhouette_avg = silhouette_score(x, cluster_predictions)
-        silhouette_sample_scores = silhouette_samples(x, cluster_predictions)
+    silhouette_avg = None
+    silhouette_sample_scores = None
+
+    if compute_scores:
+        silhouette_avg = 0
+        silhouette_sample_scores = np.zeros(len(cluster_predictions))
+
+        if len(np.unique(cluster_predictions)) > 1:
+            silhouette_avg = silhouette_score(x, cluster_predictions)
+            silhouette_sample_scores = silhouette_samples(x, cluster_predictions)
 
     return {
-        "labels": dbscan_clustering.labels_,
+        "labels": cluster_predictions,
         "silhouette": silhouette_avg,
         "silhouette_sample_scores": silhouette_sample_scores
     }

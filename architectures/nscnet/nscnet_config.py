@@ -2,7 +2,7 @@
 
 import tensorflow as tf
 import os
-from architectures import spec_augmentation
+from architectures.common import spec_augmentation
 
 SAVE_WEIGHTS = True
 LOAD_WEIGHTS = True
@@ -38,8 +38,3 @@ EPOCHS = 1
 
 USE_ARCFACE_LOSS = False
 
-# RGB_NORMALIZATION = True
-# N_CLUSTERS = 20  # Test value
-# CLUSTERING_METHOD = "kmeans"
-# IMAGES_PATH = "data"
-# INPUT_SHAPE = (64, 512, 3)
