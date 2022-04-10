@@ -49,17 +49,3 @@ class BaseNet:
             clustering_output = clustering.dbscan(features, **self.cluster_args)
 
         return clustering_output, features
-
-
-'''
-# ----------------------------------------------
-# Test
-inputs = import_image_np_dataset(IMAGES_PATH, (INPUT_SHAPE[0], INPUT_SHAPE[1]), RGB_NORMALIZATION)
-
-cluster_args = {
-    "n_clusters": N_CLUSTERS
-}
-
-features, clusters = clusterize(inputs, CLUSTERING_METHOD, cluster_args, COMPRESSION_PROCESSING_OPTIONS)
-visualizer.visualize_clusters(features, clusters)
-'''

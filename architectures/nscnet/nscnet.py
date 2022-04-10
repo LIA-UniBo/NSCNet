@@ -132,30 +132,3 @@ class NSCNet:
 
         return generator.generate_pseudo_labels()
 
-'''
-# -------------------------------------------------
-# Test
-inputs = import_image_np_dataset(config.IMAGES_PATH, (config.INPUT_SHAPE[0], config.INPUT_SHAPE[1]), config.RGB_NORMALIZATION)
-
-
-
-model = build_model(config.INPUT_SHAPE,
-                    config.POOLING,
-                    config.DIM_REPRESENTATION,
-                    config.N_CLUSTERS,
-                    config.OPTIMIZER,
-                    config.LOSS,
-                    config.USE_ARCFACE_LOSS)
-model.summary()
-
-history = train_model(model,
-            inputs,
-            config.BATCH_SIZE,
-            config.EPOCHS,
-            [CustomEarlyStop()],
-            config.POST_PROCESSING_OPTIONS,
-            config.SPEC_AUGMENTATION_OPTIONS,
-            config.EARLY_STOPPING_OPTIONS,
-            config.CLUSTERING_METHOD,
-            cluster_args)
-'''

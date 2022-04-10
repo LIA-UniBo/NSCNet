@@ -252,37 +252,3 @@ class VAENet:
             clustering_output = clustering.dbscan(features, **self.cluster_args)
 
         return clustering_output, features
-
-
-# -----------------------------------
-# Test
-'''
-inputs = import_image_np_dataset(config.IMAGES_PATH, (config.INPUT_SHAPE[0], config.INPUT_SHAPE[1]),
-                                 config.RGB_NORMALIZATION)
-
-
-cluster_args = {
-    "n_clusters": config.N_CLUSTERS
-}
-
-model = build_model(config.INPUT_SHAPE,
-                    config.STRIDE,
-                    config.KERNEL_SIZE,
-                    config.PADDING,
-                    config.STARTING_FILTERS,
-                    config.LATENT_DIM,
-                    config.N_CONV_LAYERS,
-                    config.OPTIMIZER)
-
-model.summary(expand_nested=True)
-
-
-print("Training launched...")
-history = train_model(model, inputs, config.EPOCHS, config.BATCH_SIZE)
-print("Training completed!")
-
-
-print("Clustering launched...")
-clusters = compute_clusters(model, inputs, config.CLUSTERING_METHOD, cluster_args)
-print("Clustering completed!")
-'''
