@@ -61,6 +61,7 @@ class NSCNet:
         self.weights_name = cluster_dic['name']
         self.cluster_args = cluster_dic['config']
         self.cluster_method = cluster_dic['method']
+
         self.n_clusters = self.cluster_args['n_clusters']
 
         self.checkpoint_path = os.path.join(config.WEIGHTS_PATH, "checkpoint {}.ckpt".format(self.weights_name))

@@ -173,7 +173,7 @@ class VAENet:
     def __init__(self, input_shape, cluster_dic):
 
         self.model = self.build_model(input_shape)
-        #self.n_clusters = cluster_dic['n_clusters']
+
         self.weights_name = cluster_dic['name']
         self.cluster_args = cluster_dic['config']
         self.cluster_method = cluster_dic['method']
