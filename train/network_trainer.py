@@ -302,17 +302,17 @@ class VAENetTrainer(NetworkTrainer):
 
     def __init__(self, result_dir='train/results/VAENet'):
         super().__init__('VAENet', result_dir)
+        self.vaenet = None
 
     def train(self, cluster_dic, inputs):
-        vaenet = VAENet(config.INPUT_SHAPE, cluster_dic)
+        if self.vaenet is None:
+            self.vaenet = VAENet(config.INPUT_SHAPE, cluster_dic)
 
-        if not vaenet.model_already_trained:
-            vaenet.train_model(inputs)
-        else:
-            print('__D weights already found!')
+            if not self.vaenet.model_already_trained:
+                self.vaenet.train_model(inputs)
 
-        vaenet.cluster_args['compute_scores'] = True
-        clustering_output, features = vaenet.compute_clusters(inputs)
+        self.vaenet.cluster_args['compute_scores'] = True
+        clustering_output, features = self.vaenet.compute_clusters(inputs)
 
         self._save_training_results(cluster_dic, clustering_output, features)
 

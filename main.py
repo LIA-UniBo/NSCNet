@@ -26,7 +26,7 @@ def create_inputs(dummy_dataset=False):
                                      config.RGB_NORMALIZATION)
     if dummy_dataset:
         print('using dummy dataset')
-        inputs = inputs[:500]
+        inputs = inputs[:100]
 
     execution_time = time.time() - start_time
     print("inputs creation completed in {} seconds.".format(round(execution_time, 2)))
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     #
     vaenet_trainer = VAENetTrainer()
     vaenet_trainer.kmeans(inputs)
-    # vaenet_trainer.dbscan(inputs)
+    vaenet_trainer.dbscan(inputs)
 
     # basenet_trainer = BASENetTrainer()
     # basenet_trainer.kmeans(inputs)
