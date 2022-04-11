@@ -28,7 +28,6 @@ def visualize_clusters(data, clusters_labels, use_lda=True, file_path=None):
             return
         projected_data, lost_variance_information = compute_lda(data, clusters_labels, 2)
     else:
-        # TODO: check for possible crashes when number of predicted class is less than 2
         projected_data, lost_variance_information = compute_pca(data, 2, False)
 
     x = projected_data[:,0]
@@ -54,4 +53,3 @@ def visualize_clusters(data, clusters_labels, use_lda=True, file_path=None):
     else:
         plt.savefig(file_path, bbox_inches='tight')
         plt.close(fig)
-
