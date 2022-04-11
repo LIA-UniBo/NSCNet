@@ -43,10 +43,10 @@ if __name__ == '__main__':
     # nscnet_trainer = NSCNetTrainer()
     # nscnet_trainer.kmeans(inputs)
     #
-    vaenet_trainer = VAENetTrainer()
-    vaenet_trainer.kmeans(inputs)
+    #vaenet_trainer = VAENetTrainer()
+    #vaenet_trainer.kmeans(inputs)
     # vaenet_trainer.dbscan(inputs)
 
-    # basenet_trainer = BASENetTrainer()
-    # basenet_trainer.kmeans(inputs)
+    basenet_trainer = BASENetTrainer()
+    basenet_trainer.kmeans(inputs)
     # basenet_trainer.dbscan(inputs)
