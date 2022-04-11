@@ -38,7 +38,7 @@ class NetworkTrainer:
 
         for eps, min_samples in config_list:
             print('*' * 40)
-            print(f'CLUSTERING METHOD: {method}')
+            print(f'Training started for {self.network_name} - {method}...')
             print(f'eps: {eps} - min_samples: {min_samples}')
             print('*' * 40)
 
@@ -54,11 +54,10 @@ class NetworkTrainer:
             }
 
             self.train(cluster_dic, inputs)
+            print('Training complete.\n')
 
         # Save plots
         self._save_dbscan_training_plots(file_path_prefix)
-
-        print('Training completed.\n\n')
 
     def kmeans(self, inputs):
 
@@ -70,7 +69,7 @@ class NetworkTrainer:
 
         for K in config.N_POSSIBLE_CLUSTERS:
             print('*' * 40)
-            print(f'CLUSTERING METHOD: {method}')
+            print(f'Training started for {self.network_name} - {method}...')
             print(f'k: {K}')
             print('*' * 40)
 
@@ -84,11 +83,10 @@ class NetworkTrainer:
             }
 
             self.train(cluster_dic, inputs)
+            print('Training complete.\n')
 
         # Save plots
         self._save_kmeans_training_plots(file_path_prefix)
-
-        print('Training completed.\n\n')
 
     @abc.abstractmethod
     def train(self, **kwargs):
@@ -293,6 +291,7 @@ class NSCNetTrainer(NetworkTrainer):
 
         nscnet.cluster_args['compute_scores'] = True
         clustering_output, features = nscnet.compute_clusters(inputs)
+
         self._save_training_results(cluster_dic, clustering_output, features)
 
     def dbscan(self, inputs):
@@ -307,11 +306,14 @@ class VAENetTrainer(NetworkTrainer):
     def train(self, cluster_dic, inputs):
         vaenet = VAENet(config.INPUT_SHAPE, cluster_dic)
 
-        # TODO: check weights, and don't train if they exist
-        vaenet.train_model(inputs)
+        if not vaenet.model_already_trained:
+            vaenet.train_model(inputs)
+        else:
+            print('__D weights already found!')
 
         vaenet.cluster_args['compute_scores'] = True
         clustering_output, features = vaenet.compute_clusters(inputs)
+
         self._save_training_results(cluster_dic, clustering_output, features)
 
 
@@ -319,11 +321,16 @@ class BASENetTrainer(NetworkTrainer):
 
     def __init__(self, result_dir='train/results/BASENet'):
         super().__init__('BASENet', result_dir)
+        self.features = None
 
     def train(self, cluster_dic, inputs):
 
         basenet = BaseNet(cluster_dic)
 
         basenet.cluster_args['compute_scores'] = True
-        clustering_output, features = basenet.compute_clusters(inputs)
-        self._save_training_results(cluster_dic, clustering_output, features)
+        clustering_output, self.features = basenet.compute_clusters(inputs, features=self.features)
+
+        self._save_training_results(cluster_dic, clustering_output, self.features)
+
+
+

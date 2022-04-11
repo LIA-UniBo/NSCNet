@@ -27,12 +27,14 @@ class BaseNet:
 
         return data
 
-    def compute_clusters(self, data):
+    def compute_clusters(self, data, features=None):
 
         if self.cluster_method not in clustering.CLUSTERING_METHODS:
             raise Exception("cluster method must be one between " + ",".join(clustering.CLUSTERING_METHODS))
 
-        features = self.compress_data(data, **config.COMPRESSION_PROCESSING_OPTIONS)
+        # Avoid to compute multiple times the same operation during different training
+        if features is None:
+            features = self.compress_data(data, **config.COMPRESSION_PROCESSING_OPTIONS)
 
         # TODO: this could be useful for finding the EPS
         # neighbors = NearestNeighbors(n_neighbors=5)

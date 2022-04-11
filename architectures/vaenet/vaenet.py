@@ -183,15 +183,18 @@ class VAENet:
 
         self.model = self.build_model(input_shape)
 
+        self.model_already_trained = False
         if config.LOAD_WEIGHTS:
             if os.path.exists(self.checkpoint_path + ".index"):
                 print("Loading model's weights...")
                 self.model.load_weights(self.checkpoint_path)
                 print("Model's weights successfully loaded!")
+                self.model_already_trained = True
 
             else:
                 print("WARNING: model's weights not found, the model will be executed with initialized random weights.")
                 print("Ignore this warning if it is a test.")
+                self.model_already_trained = False
 
         self.model.summary()
         print('VAENet initialization completed.')

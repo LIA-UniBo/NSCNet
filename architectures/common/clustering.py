@@ -92,9 +92,6 @@ def dbscan(x, eps, min_samples, metric="euclidean", compute_scores=False, **kwar
     # Make predictions and compute the metrics
     cluster_predictions = dbscan_clustering.fit_predict(x)
 
-    # TODO: noise must be properly treated
-    cluster_predictions[cluster_predictions < 0] = 0
-
     silhouette_avg = None
     silhouette_sample_scores = None
 
