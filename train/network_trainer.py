@@ -289,16 +289,32 @@ class NSCNetTrainer(NetworkTrainer):
 
     def train(self, cluster_dic, inputs):
         nscnet = NSCNet(config.INPUT_SHAPE, cluster_dic)
-        nscnet.train_model(inputs)
+        history, nmi_scores = nscnet.train_model(inputs)
 
         nscnet.cluster_args['compute_scores'] = True
         clustering_output, features = nscnet.compute_clusters(inputs)
 
-        self._save_training_results(cluster_dic, clustering_output, features)
+        self._save_training_results(cluster_dic, clustering_output, features, nmi_scores)
 
     def dbscan(self, inputs):
         print('This architecture does not support the DBSCAN algorithm')
 
+    def _save_training_results(self, cluster_dic, clustering_output, features, nmi_scores):
+
+        super()._save_training_results(cluster_dic, clustering_output, features)
+
+        #Save NMI scores
+        epochs = list(range(1,len(nmi_scores)+1))
+
+        fig = plt.figure()
+        plt.plot(epochs, nmi_scores)
+        plt.xticks(epochs)
+        plt.title("NMI SCORES")
+        plt.xlabel('Epochs')
+        plt.ylabel('NMI')
+
+        plt.savefig(cluster_dic['name']+"_nmi.png", bbox_inches='tight')
+        plt.close(fig)
 
 class VAENetTrainer(NetworkTrainer):
 
