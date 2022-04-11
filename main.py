@@ -26,7 +26,7 @@ def create_inputs(dummy_dataset=False):
                                      config.RGB_NORMALIZATION)
     if dummy_dataset:
         print('using dummy dataset')
-        inputs = inputs[:100]
+        inputs = inputs[:500]
 
     execution_time = time.time() - start_time
     print("inputs creation completed in {} seconds.".format(round(execution_time, 2)))

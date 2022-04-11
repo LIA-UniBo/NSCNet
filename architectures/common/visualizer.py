@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from collections import Counter
 
 from architectures.common.matrix_manipulation import compute_pca, compute_lda, normalize
 
@@ -48,6 +49,20 @@ def visualize_clusters(data, clusters_labels, use_lda=True, file_path=None):
         plt.scatter(x_values, y_values, color=color_map(label), alpha=0.5, label=label)
 
     #plt.legend()
+    if file_path is None:
+        plt.show()
+    else:
+        plt.savefig(file_path, bbox_inches='tight')
+        plt.close(fig)
+
+def visualize_clusters_distribution(clusters_labels, file_path=None):
+
+    fig = plt.figure()
+
+    c = Counter(clusters_labels)
+    for i, value in enumerate(c.most_common()):
+        plt.bar(i, value[1], width=.5, color='blue')
+
     if file_path is None:
         plt.show()
     else:

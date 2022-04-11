@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from architectures.basenet.basenet import BaseNet
 from architectures.nscnet.nscnet import NSCNet
 from architectures.vaenet.vaenet import VAENet
-from architectures.common.visualizer import visualize_clusters
+from architectures.common.visualizer import visualize_clusters, visualize_clusters_distribution
 
 
 class NetworkTrainer:
@@ -112,6 +112,8 @@ class NetworkTrainer:
 
         # Save image showing clusters
         visualize_clusters(features, clustering_output["labels"], file_path=file_name + '.png')
+        # Save image showing clusters distribution
+        visualize_clusters_distribution(clustering_output["labels"],file_path=file_name + '_distribution.png')
         # Save dictionary results
         json_file_name = file_name + '.json'
         with open(json_file_name, 'w') as f:
@@ -331,6 +333,3 @@ class BASENetTrainer(NetworkTrainer):
         clustering_output, self.features = basenet.compute_clusters(inputs, features=self.features)
 
         self._save_training_results(cluster_dic, clustering_output, self.features)
-
-
-
