@@ -3,10 +3,10 @@ from architectures.common import clustering, matrix_manipulation
 
 import numpy as np
 
+
 class BaseNet:
 
     def __init__(self, cluster_dic):
-        self.n_clusters = cluster_dic['n_clusters']
         self.cluster_args = cluster_dic['config']
         self.cluster_method = cluster_dic['method']
 
@@ -34,6 +34,7 @@ class BaseNet:
 
         features = self.compress_data(data, **config.COMPRESSION_PROCESSING_OPTIONS)
 
+        # TODO: this could be useful for finding the EPS
         # neighbors = NearestNeighbors(n_neighbors=5)
         # neighbors_fit = neighbors.fit(features)
         # distances, indices = neighbors_fit.kneighbors(features)

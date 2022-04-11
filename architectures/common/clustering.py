@@ -76,18 +76,18 @@ def dbscan(x, eps, min_samples, metric="euclidean", compute_scores=False, **kwar
     Dictionary:
         labels -> clustered labels for the sample points
     """
-
+    '''
     dbscan_clustering = DBSCAN(eps=eps,
                                min_samples=min_samples,
                                metric=metric,
                                n_jobs=None)
-
     '''
+
     dbscan_clustering = OPTICS(
                                min_samples=min_samples,
                                metric=metric,
                                n_jobs=None)
-    '''
+
 
     # Make predictions and compute the metrics
     cluster_predictions = dbscan_clustering.fit_predict(x)

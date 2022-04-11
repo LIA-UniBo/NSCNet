@@ -173,12 +173,13 @@ class VAENet:
     def __init__(self, input_shape, cluster_dic):
 
         self.model = self.build_model(input_shape)
-        self.n_clusters = cluster_dic['n_clusters']
+        #self.n_clusters = cluster_dic['n_clusters']
+        self.weights_name = cluster_dic['name']
         self.cluster_args = cluster_dic['config']
         self.cluster_method = cluster_dic['method']
         self.config = config
 
-        self.checkpoint_path = os.path.join(config.WEIGHTS_PATH, "checkpoint {} {}.ckpt".format(self.cluster_method, self.n_clusters))
+        self.checkpoint_path = os.path.join(config.WEIGHTS_PATH, "checkpoint {}.ckpt".format(self.weights_name))
 
         self.model = self.build_model(input_shape)
 
@@ -193,7 +194,7 @@ class VAENet:
                 print("Ignore this warning if it is a test.")
 
         self.model.summary()
-        print('NSCNet initialization completed.')
+        print('VAENet initialization completed.')
 
     def build_model(self, input_shape):
         model_input = tf.keras.Input(shape=input_shape)
