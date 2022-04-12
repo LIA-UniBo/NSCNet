@@ -117,7 +117,7 @@ class NSCNet:
                                  epochs=config.EPOCHS,
                                  callbacks=callbacks)
 
-        return history
+        return history, generator.nmi_scores
 
     def compute_clusters(self, inputs):
 
@@ -134,4 +134,3 @@ class NSCNet:
                               generate_label_on_init=False)
 
         return generator.generate_pseudo_labels()
-
