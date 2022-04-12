@@ -34,19 +34,28 @@ def create_inputs(dummy_dataset=False):
     return inputs
 
 
-if __name__ == '__main__':
+def vaenet():
+    inputs = init()
+    vaenet_trainer = VAENetTrainer()
+    vaenet_trainer.kmeans(inputs)
+    vaenet_trainer.dbscan(inputs)
 
-    create_required_folders()
 
-    inputs = create_inputs(dummy_dataset=True)
-
+def nscnet():
+    inputs = init()
     nscnet_trainer = NSCNetTrainer()
     nscnet_trainer.kmeans(inputs)
-    #
-    #vaenet_trainer = VAENetTrainer()
-    #vaenet_trainer.kmeans(inputs)
-    #vaenet_trainer.dbscan(inputs)
 
-    # basenet_trainer = BASENetTrainer()
-    # basenet_trainer.kmeans(inputs)
-    # basenet_trainer.dbscan(inputs)
+
+def basenet():
+    inputs = init()
+    basenet_trainer = BASENetTrainer()
+    basenet_trainer.kmeans(inputs)
+    basenet_trainer.dbscan(inputs)
+
+def init():
+    create_required_folders()
+    return create_inputs(dummy_dataset=True)
+
+if __name__ == '__main__':
+    pass
