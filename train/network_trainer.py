@@ -167,11 +167,11 @@ class NetworkTrainer:
         plt.savefig(file_path, bbox_inches='tight')
         plt.close(fig)
 
-        self._create_silhouette_samples_plot(cluster_labels,
-                                             silhouette_sample_scores,
-                                             dbscan_clusters,
-                                             silhouette,
-                                             f'{results_dir}_SILHOUETTE_PLOTS.png')
+        # self._create_silhouette_samples_plot(cluster_labels,
+        #                                      silhouette_sample_scores,
+        #                                      dbscan_clusters,
+        #                                      silhouette,
+        #                                      f'{results_dir}_SILHOUETTE_PLOTS.png')
 
     def _save_kmeans_training_plots(self, results_dir):
 
@@ -213,14 +213,16 @@ class NetworkTrainer:
         plt.savefig(file_path, bbox_inches='tight')
         plt.close(fig)
 
-        self._create_silhouette_samples_plot(cluster_labels,
-                                             silhouette_sample_scores,
-                                             k,
-                                             silhouette,
-                                             f'{results_dir}_SILHOUETTE_PLOTS.png')
+        # self._create_silhouette_samples_plot(cluster_labels,
+        #                                      silhouette_sample_scores,
+        #                                      k,
+        #                                      silhouette,
+        #                                      f'{results_dir}_SILHOUETTE_PLOTS.png')
 
     def _create_silhouette_samples_plot(self, cluster_labels, silhouette_sample_scores,
                                         k, silhouette, file_name):
+
+        # The height of this plot must be limited to 65536 Pixels
         fig, subplots = plt.subplots(len(k), 1, gridspec_kw={'height_ratios': k}, figsize=(6.5, 0.8 * sum(k)))
         for idx, n_current_cluster in enumerate(k):
 

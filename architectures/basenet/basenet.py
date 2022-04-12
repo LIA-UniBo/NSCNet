@@ -20,7 +20,7 @@ class BaseNet:
             data = matrix_manipulation.normalize(data)
 
         data, lost_variance_information = matrix_manipulation.compute_pca(data, pca, whiten)
-        print("Lost variance information: {}".format(lost_variance_information))
+        print("Lost variance information after PCA: {}".format(lost_variance_information))
 
         if l2_normalize:
             data = matrix_manipulation.l2_normalize(data)

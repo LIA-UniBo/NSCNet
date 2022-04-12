@@ -25,7 +25,7 @@ def visualize_clusters(data, clusters_labels, use_lda=True, file_path=None):
 
     if use_lda:
         # TODO: this must be checked
-        if len(np.unique(clusters_labels)) == 1:
+        if len(np.unique(clusters_labels)) < 3:
             return
         projected_data, lost_variance_information = compute_lda(data, clusters_labels, 2)
     else:
@@ -34,7 +34,8 @@ def visualize_clusters(data, clusters_labels, use_lda=True, file_path=None):
     x = projected_data[:,0]
     y = projected_data[:,1]
 
-    print("Lost variance information in dimensionality reduction: {}".format(lost_variance_information))
+    print("Lost variance information in dimensionality reduction for visualizing clusters: {}"
+          .format(lost_variance_information))
 
     non_empty_labels = np.unique(clusters_labels)
 
