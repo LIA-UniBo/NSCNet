@@ -33,7 +33,7 @@ DIM_REPRESENTATION = 512
 LEARNING_RATE = 1e-3
 OPTIMIZER = tf.keras.optimizers.Adam(LEARNING_RATE)
 LOSS = tf.keras.losses.SparseCategoricalCrossentropy()
-BATCH_SIZE = 16
-EPOCHS = 3
+BATCH_SIZE = 32
+EPOCHS = 50
 
 USE_ARCFACE_LOSS = False

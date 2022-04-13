@@ -319,6 +319,7 @@ class NSCNetTrainer(NetworkTrainer):
         plt.savefig(cluster_dic['name']+"_nmi.png", bbox_inches='tight')
         plt.close(fig)
 
+
 class VAENetTrainer(NetworkTrainer):
 
     def __init__(self, result_dir='train/results/VAENet'):
