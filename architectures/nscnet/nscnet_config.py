@@ -17,7 +17,7 @@ POST_PROCESSING_OPTIONS = {
 
 SPEC_AUGMENTATION_OPTIONS = {
     "apply": True,
-    "policy": spec_augmentation.POLICIES["LB"]
+    "policy": spec_augmentation.POLICIES["Custom"]
 }
 
 EARLY_STOPPING_OPTIONS = {
