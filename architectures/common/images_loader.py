@@ -32,7 +32,7 @@ def import_image_tf_dataset(path, batch_size, input_shape, shuffle=True):
 def import_image_np_dataset(path, input_shape, normalize):
 
     # Load all the images into a tensor dataset with only one batch (first dim=1)
-    tf_dataset = import_image_tf_dataset(path, None, input_shape, shuffle=False)
+    tf_dataset = import_image_tf_dataset(path, 20000, input_shape, shuffle=False)
 
     # Transform tf.Dataset into a numpy array
     np_dataset = None
