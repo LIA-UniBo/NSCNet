@@ -14,8 +14,8 @@ class Generator(tf.keras.utils.Sequence):
 
     def __init__(self, x, batch_size, conv_net_model, features_extraction_options,
                  spec_augmentation_options, early_stopping_options, cluster_method,
-                 cluster_args, shuffle=True, verbose=True, custom_sampler=True,
-                 generate_label_on_init=True):
+                 cluster_args, batches_per_epoch, shuffle=True, verbose=True,
+                 custom_sampler=True, generate_label_on_init=True):
 
         """
         Parameters:
@@ -55,6 +55,7 @@ class Generator(tf.keras.utils.Sequence):
         self.early_stopping_options = early_stopping_options
         self.cluster_method = cluster_method
         self.cluster_args = cluster_args
+        self.batches_per_epoch = batches_per_epoch
         self.verbose = verbose
         self.custom_sampler = custom_sampler
 
@@ -76,7 +77,7 @@ class Generator(tf.keras.utils.Sequence):
     def __len__(self):
 
         # Return the number of batches for training
-        return math.ceil(len(self.x) / self.batch_size)
+        return self.batches_per_epoch * math.ceil(len(self.x) / self.batch_size)
 
     def __getitem__(self, idx):
 

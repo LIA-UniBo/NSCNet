@@ -105,7 +105,8 @@ class NSCNet:
                               config.SPEC_AUGMENTATION_OPTIONS,
                               config.EARLY_STOPPING_OPTIONS,
                               self.cluster_method,
-                              self.cluster_args)
+                              self.cluster_args,
+                              config.BATCHES_PER_EPOCH)
 
         callbacks = [CustomEarlyStop()]
         if config.SAVE_WEIGHTS:
@@ -129,6 +130,7 @@ class NSCNet:
                               config.EARLY_STOPPING_OPTIONS,
                               self.cluster_method,
                               self.cluster_args,
+                              config.batches_per_epoch,
                               shuffle=False,
                               custom_sampler=False,
                               generate_label_on_init=False)

@@ -35,5 +35,6 @@ OPTIMIZER = tf.keras.optimizers.Adam(LEARNING_RATE)
 LOSS = tf.keras.losses.SparseCategoricalCrossentropy()
 BATCH_SIZE = 32
 EPOCHS = 50
+BATCHES_PER_EPOCH = 1
 
 USE_ARCFACE_LOSS = False
