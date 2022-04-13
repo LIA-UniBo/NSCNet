@@ -288,13 +288,14 @@ class NSCNetTrainer(NetworkTrainer):
 
     def __init__(self, result_dir='train/results/NSCNet'):
         super().__init__('NSCNet', result_dir)
+        self.nscnet = None
 
     def train(self, cluster_dic, inputs):
-        nscnet = NSCNet(config.INPUT_SHAPE, cluster_dic)
-        history, nmi_scores = nscnet.train_model(inputs)
+        self.nscnet = NSCNet(config.INPUT_SHAPE, cluster_dic)
+        history, nmi_scores = self.nscnet.train_model(inputs)
 
-        nscnet.cluster_args['compute_scores'] = True
-        clustering_output, features = nscnet.compute_clusters(inputs)
+        self.nscnet.cluster_args['compute_scores'] = True
+        clustering_output, features = self.nscnet.compute_clusters(inputs)
 
         self._save_training_results(cluster_dic, clustering_output, features, nmi_scores)
 
@@ -342,12 +343,13 @@ class BASENetTrainer(NetworkTrainer):
     def __init__(self, result_dir='train/results/BASENet'):
         super().__init__('BASENet', result_dir)
         self.features = None
+        self.basenet = None
 
     def train(self, cluster_dic, inputs):
 
-        basenet = BaseNet(cluster_dic)
+        self.basenet = BaseNet(cluster_dic)
 
-        basenet.cluster_args['compute_scores'] = True
-        clustering_output, self.features = basenet.compute_clusters(inputs, features=self.features)
+        self.basenet.cluster_args['compute_scores'] = True
+        clustering_output, self.features = self.basenet.compute_clusters(inputs, features=self.features)
 
         self._save_training_results(cluster_dic, clustering_output, self.features)
