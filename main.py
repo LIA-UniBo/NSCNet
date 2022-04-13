@@ -53,9 +53,11 @@ def basenet():
     basenet_trainer.kmeans(inputs)
     basenet_trainer.dbscan(inputs)
 
+
 def init():
     create_required_folders()
-    return create_inputs(dummy_dataset=True)
+    return create_inputs(dummy_dataset=False)
+
 
 if __name__ == '__main__':
-    pass
+    basenet()
