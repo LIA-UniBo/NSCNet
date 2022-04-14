@@ -104,7 +104,7 @@ class NSCNet:
                            n_clusters,
                            use_arcface=config.USE_ARCFACE_LOSS)
         model([model_input_x, model_input_y])
-        model.compile(optimizer=config.OPTIMIZER, loss=config.LOSS, run_eagerly=True)
+        model.compile(optimizer=config.OPTIMIZER, loss=config.LOSS, run_eagerly=False)
 
         return model
 
