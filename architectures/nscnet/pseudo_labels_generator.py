@@ -100,7 +100,7 @@ class Generator(tf.keras.utils.Sequence):
             augment_batch_func = lambda x: spec_augmentation.augment(x, **policy)
             batch_x = list(map(augment_batch_func, batch_x))
 
-        return np.array(batch_x), np.array(batch_y)
+        return [np.array(batch_x), np.array(batch_y)], np.array(batch_y)
 
     def on_epoch_end(self):
 
