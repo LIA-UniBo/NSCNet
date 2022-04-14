@@ -130,7 +130,7 @@ class NSCNet:
                               config.EARLY_STOPPING_OPTIONS,
                               self.cluster_method,
                               self.cluster_args,
-                              config.batches_per_epoch,
+                              config.BATCHES_PER_EPOCH,
                               shuffle=False,
                               custom_sampler=False,
                               generate_label_on_init=False)
