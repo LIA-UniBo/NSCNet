@@ -66,10 +66,7 @@ class CustomEarlyStop(tf.keras.callbacks.Callback):
 class NSCNet:
     def __init__(self, input_shape, cluster_dic):
         # TODO: this must be removed. Only for Colab debug purposes
-        param_dic = {item: getattr(config, item)
-                     for item in dir(config) if not item.startswith("__") and not item.endswith("__")}
-        for key in param_dic.keys():
-            print(f'{key} = {param_dic[key]}')
+        print(f'__D USE_ARC_FACE: {config.USE_ARCFACE_LOSS}')
 
         self.weights_name = cluster_dic['name']
         self.cluster_args = cluster_dic['config']
