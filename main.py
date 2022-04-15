@@ -57,7 +57,7 @@ def basenet():
 
 def init():
     create_required_folders()
-    return create_inputs(dummy_dataset=True)
+    return create_inputs()
 
 
 import json
