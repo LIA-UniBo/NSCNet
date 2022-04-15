@@ -205,7 +205,7 @@ class Generator(tf.keras.utils.Sequence):
 
         if len(self.nmi_scores) >= patience:
             last_scores = self.nmi_scores[-patience:]  # Take N=patience+1 last scores
-            delta_scores = -np.diff(last_scores)  # Compute deltas between consecutive scores (epochs)
+            delta_scores = np.diff(last_scores)  # Compute deltas between consecutive scores (epochs)
             no_improvemements = np.all(delta_scores < min_delta)  # Check if there is no improvement in all of them
 
             # Stop the training
