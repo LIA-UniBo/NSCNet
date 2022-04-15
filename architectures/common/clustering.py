@@ -3,7 +3,6 @@
 import numpy as np
 from sklearn.cluster import KMeans, OPTICS
 from sklearn.cluster import MiniBatchKMeans
-from sklearn.cluster import DBSCAN
 from sklearn.metrics import silhouette_score, silhouette_samples
 
 CLUSTERING_METHODS = ["kmeans", "dbscan"]
@@ -87,7 +86,6 @@ def dbscan(x, eps, min_samples, metric="euclidean", compute_scores=False, **kwar
                                min_samples=min_samples,
                                metric=metric,
                                n_jobs=None)
-
 
     # Make predictions and compute the metrics
     cluster_predictions = dbscan_clustering.fit_predict(x)

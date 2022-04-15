@@ -3,6 +3,7 @@ import time
 import config
 
 import matplotlib.pyplot as plt
+
 from train.network_trainer import BASENetTrainer, NSCNetTrainer, VAENetTrainer
 from architectures.common.images_loader import import_image_np_dataset
 
@@ -51,12 +52,49 @@ def basenet():
     inputs = init()
     basenet_trainer = BASENetTrainer()
     basenet_trainer.kmeans(inputs)
-    basenet_trainer.dbscan(inputs)
+    # basenet_trainer.dbscan(inputs)
 
 
 def init():
     create_required_folders()
-    return create_inputs(dummy_dataset=False)
+    return create_inputs(dummy_dataset=True)
+
+
+import json
+from architectures.common.visualizer import visualize_clusters_distribution
+def TEMP_create_distribution_plot():
+    with open('NSCNet_kmeans_K128.json') as json_file:
+        data = json.load(json_file)
+        visualize_clusters_distribution(data['labels'], 'NSCNet_kmeans_K128_distribution.png')
+
+
+def TEMP_NMI_plot():
+    nmi_scores = []
+    with open('TrainingLogs_K128_ArcFace.txt', 'r', encoding='utf8') as file:
+        lines = file.readlines()
+        for line in lines:
+            if line.startswith('NMI score: '):
+                nmi_scores.append(float(line.split('NMI score: ')[1]))
+
+    epochs = list(range(1, len(nmi_scores) + 1))
+
+    fig = plt.figure(figsize=(13, 5))
+    plt.plot(epochs, nmi_scores)
+    plt.xticks(epochs)
+    plt.title("NMI SCORES")
+    plt.xlabel('Epochs')
+    plt.ylabel('NMI')
+
+    # plt.savefig(cluster_dic['name'] + "_nmi.png", bbox_inches='tight')
+    # plt.close(fig)
+    plt.show(block=True)
+
+
+def TEMP_print_config_file():
+    with open('architectures/nscnet/nscnet_config.py', 'r', encoding='utf8') as file:
+        lines = file.readlines()
+        for line in lines:
+            print(repr(line + '\\')[1: -2])
 
 
 if __name__ == '__main__':
