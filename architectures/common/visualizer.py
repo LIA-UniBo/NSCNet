@@ -65,10 +65,11 @@ def visualize_clusters_distribution(clusters_labels, file_path=None):
     fig = plt.figure(figsize=(max(len(c) * 0.3, 10), 10))
 
     for i, value in enumerate(c.most_common()):
-        plt.bar(value[0], value[1], width=.5, color='blue')
+        plt.bar(i, value[1], width=.5, color='blue')
 
     # Force xticks to be equal to the labels (avoid decimals)
-    plt.xticks([element[0] for element in c.most_common()])
+    plt.xticks(np.arange(len(c)), [element[0] for element in c.most_common()], rotation='vertical')
+    #plt.show(block=True)
 
     if file_path is None:
         plt.show()
