@@ -98,4 +98,4 @@ def TEMP_print_config_file():
 
 
 if __name__ == '__main__':
-    basenet()
+    nscnet()
