@@ -61,16 +61,18 @@ def init():
 
 
 import json
-from architectures.common.visualizer import visualize_clusters_distribution
+from architectures.common.visualizer import visualize_clusters_distribution, visualize_clusters
+
+
 def TEMP_create_distribution_plot():
-    with open('NSCNet_kmeans_K128.json') as json_file:
+    with open('NSCNet_kmeans_K256.json') as json_file:
         data = json.load(json_file)
-        visualize_clusters_distribution(data['labels'], 'NSCNet_kmeans_K128_distribution.png')
+        visualize_clusters_distribution(data['labels'], 'NSCNet_kmeans_K256.png')
 
 
 def TEMP_NMI_plot():
     nmi_scores = []
-    with open('TrainingLogs_K128_ArcFace.txt', 'r', encoding='utf8') as file:
+    with open('NSCNet_1024_ArcFace_Logs.txt', 'r', encoding='utf8') as file:
         lines = file.readlines()
         for line in lines:
             if line.startswith('NMI score: '):
@@ -97,5 +99,21 @@ def TEMP_print_config_file():
             print(repr(line + '\\')[1: -2])
 
 
+def TEMP_save_results():
+    dir_result = 'res_arcface_off'
+    json_file_names = [
+        'res_arcface_off/NSCNet_kmeans_K64.json',
+        'res_arcface_off/NSCNet_kmeans_K128.json',
+        'res_arcface_off/NSCNet_kmeans_K256.json',
+        'res_arcface_off/NSCNet_kmeans_K512.json',
+        'res_arcface_off/NSCNet_kmeans_K1024.json',
+        'res_arcface_off/NSCNet_kmeans_K2048.json',
+    ]
+    trainer = NSCNetTrainer(dir_result)
+    trainer.saved_json_file_paths = json_file_names
+
+    trainer._save_kmeans_training_plots(dir_result)
+
+
 if __name__ == '__main__':
-    basenet()
+    pass
