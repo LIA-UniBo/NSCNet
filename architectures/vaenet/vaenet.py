@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 class Encoder(tf.keras.Model):
 
-    def __init__(self, stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers, activation="relu"):
+    def __init__(self, stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers, dense_units, activation="relu"):
         super(Encoder, self).__init__()
 
         self.conv_layers = [layers.Conv2D(starting_filters * 2 ** (i - 1),
@@ -22,18 +22,33 @@ class Encoder(tf.keras.Model):
                                           name=f'encoder_conv_{i}')
                             for i in range(1, n_conv_layers + 1)]
 
+        self.last_conv = layers.Conv2D(starting_filters * 2 ** (n_conv_layers - 1),
+                                        kernel_size,
+                                        strides=stride,
+                                        padding=padding,
+                                        data_format="channels_last",
+                                        activation=activation,
+                                        name=f'encoder_conv_{n_conv_layers + 1}')
+
         self.flatten_layer = layers.Flatten()
+
+        self.dense_layer = layers.Dense(dense_units, activation=activation)
 
         self.mean_dense_layer = layers.Dense(latent_dim, activation=activation, name="mean")
         self.std_dense_layer = layers.Dense(latent_dim, activation=activation, name="std")
 
     def call(self, x):
+
         for conv_layer in self.conv_layers:
             x = conv_layer(x)
+
+        x = self.last_conv(x)
 
         compressed_shape = x.shape
 
         x = self.flatten_layer(x)
+
+        x = self.dense_layer(x)
 
         mean_x = self.mean_dense_layer(x)
         log_var_x = self.std_dense_layer(x)
@@ -43,11 +58,18 @@ class Encoder(tf.keras.Model):
 
 class Decoder(tf.keras.Model):
 
-    def __init__(self, stride, kernel_size, padding, starting_filters, n_conv_layers, input_shape, activation="relu"):
+    def __init__(self, stride, kernel_size, padding, starting_filters, n_conv_layers, input_shape, dense_units, activation="relu"):
 
         super(Decoder, self).__init__()
 
         self.activation = activation
+
+        self.conv_transpose = layers.Conv2DTranspose(starting_filters * 2 ** (n_conv_layers - 1),
+                                                     kernel_size,
+                                                     padding=padding,
+                                                     data_format="channels_last",
+                                                     activation=activation,
+                                                     name=f'decoder_deconv_{n_conv_layers}')
 
         self.conv_transpose_layers = [layers.Conv2DTranspose(starting_filters * 2 ** (i - 1),
                                                              kernel_size,
@@ -60,11 +82,14 @@ class Decoder(tf.keras.Model):
 
         self.output_layer = layers.Conv2DTranspose(input_shape[2],
                                                    kernel_size,
+                                                   strides=stride,
                                                    padding="same",
                                                    data_format="channels_last",
                                                    activation="sigmoid")
 
-        self.dense_layer = None
+        self.dense_layer_1 = layers.Dense(dense_units, activation=activation)
+
+        self.dense_layer_2 = None
         self.reshape_layer = None
 
     def call(self, inputs):
@@ -74,13 +99,17 @@ class Decoder(tf.keras.Model):
         x = inputs[0]
         compressed_shape = inputs[1]
 
-        if self.dense_layer is None:
-            self.dense_layer = layers.Dense(compressed_shape[1] * compressed_shape[2] * compressed_shape[3],
+        if self.dense_layer_2 is None:
+            self.dense_layer_2 = layers.Dense(compressed_shape[1] * compressed_shape[2] * compressed_shape[3],
                                             activation=self.activation)
             self.reshape_layer = layers.Reshape((compressed_shape[1], compressed_shape[2], compressed_shape[3]))
 
-        x = self.dense_layer(x)
+        x = self.dense_layer_1(x)
+        x = self.dense_layer_2(x)
+
         x = self.reshape_layer(x)
+
+        x = self.conv_transpose(x)
 
         for conv_transpose_layer in self.conv_transpose_layers:
             x = conv_transpose_layer(x)
@@ -99,12 +128,13 @@ class ConvolutionalVAE(tf.keras.Model):
                  starting_filters,
                  latent_dim,
                  n_conv_layers,
+                 dense_units,
                  input_shape,
                  activation="relu"):
         super(ConvolutionalVAE, self).__init__()
 
-        self.encoder = Encoder(stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers, activation)
-        self.decoder = Decoder(stride, kernel_size, padding, starting_filters, n_conv_layers, input_shape, activation)
+        self.encoder = Encoder(stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers, dense_units, activation)
+        self.decoder = Decoder(stride, kernel_size, padding, starting_filters, n_conv_layers, input_shape, dense_units, activation)
 
         self.total_loss_tracker = metrics.Mean(name="total_loss")
         self.reconstruction_loss_tracker = metrics.Mean(name="reconstruction_loss")
@@ -208,10 +238,10 @@ class VAENet:
                                config.STARTING_FILTERS,
                                config.LATENT_DIM,
                                config.N_CONV_LAYERS,
+                               config.DENSE_UNITS,
                                input_shape)
         vae(model_input)
         vae.compile(optimizer=config.OPTIMIZER, run_eagerly=False)
-
         return vae
 
     def train_model(self, data):
