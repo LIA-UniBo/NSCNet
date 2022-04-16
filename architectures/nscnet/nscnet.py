@@ -34,15 +34,23 @@ class Classifier(tf.keras.Model):
         super(Classifier, self).__init__()
 
         self.conv_net = conv_net
+        self.use_arcface = use_arcface
 
         if use_arcface:
             self.classification_head = ArcFace(n_clusters)
         else:
             self.classification_head = layers.Dense(n_clusters, activation="softmax")
 
-    def call(self, x):
-        x = self.conv_net(x)
-        x = self.classification_head(x)
+    def call(self, inputs):
+        x = inputs[0]
+        y = inputs[1]
+
+        if self.use_arcface:
+            x = self.conv_net(x)
+            x = self.classification_head([x, y])
+        else:
+            x = self.conv_net(x)
+            x = self.classification_head(x)
 
         return x
 
@@ -57,6 +65,8 @@ class CustomEarlyStop(tf.keras.callbacks.Callback):
 
 class NSCNet:
     def __init__(self, input_shape, cluster_dic):
+        # TODO: this must be removed. Only for Colab debug purposes
+        print(f'__D USE_ARC_FACE: {config.USE_ARCFACE_LOSS}')
 
         self.weights_name = cluster_dic['name']
         self.cluster_args = cluster_dic['config']
@@ -83,7 +93,8 @@ class NSCNet:
 
     def build_model(self, n_clusters, input_shape):
 
-        model_input = tf.keras.Input(shape=input_shape)
+        model_input_x = tf.keras.Input(shape=input_shape)
+        model_input_y = tf.keras.Input(shape=(1,), dtype=tf.int32)
 
         conv_net = ConvNet(input_shape,
                            config.POOLING,
@@ -92,8 +103,8 @@ class NSCNet:
         model = Classifier(conv_net,
                            n_clusters,
                            use_arcface=config.USE_ARCFACE_LOSS)
-        model(model_input)
-        model.compile(optimizer=config.OPTIMIZER, loss=config.LOSS)
+        model([model_input_x, model_input_y])
+        model.compile(optimizer=config.OPTIMIZER, loss=config.LOSS, run_eagerly=False)
 
         return model
 
@@ -110,7 +121,8 @@ class NSCNet:
 
         callbacks = [CustomEarlyStop()]
         if config.SAVE_WEIGHTS:
-            callbacks.append(tf.keras.callbacks.ModelCheckpoint(filepath=self.checkpoint_path, save_weights_only=True, verbose=1))
+            callbacks.append(
+                tf.keras.callbacks.ModelCheckpoint(filepath=self.checkpoint_path, save_weights_only=True, verbose=1))
 
         history = self.model.fit(x=generator,
                                  verbose=1,
@@ -130,7 +142,7 @@ class NSCNet:
                               config.EARLY_STOPPING_OPTIONS,
                               self.cluster_method,
                               self.cluster_args,
-                              config.batches_per_epoch,
+                              config.BATCHES_PER_EPOCH,
                               shuffle=False,
                               custom_sampler=False,
                               generate_label_on_init=False)

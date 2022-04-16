@@ -20,13 +20,17 @@ class ArcFace(tf.keras.layers.Layer):
         self.output_regularizer = output_regularizer
 
     def build(self, input_shape):
+
         self.custom_weights = self.add_weight(name='custom_weights',
-                                              shape=(input_shape[-1], self.output_units),
+                                              shape=(input_shape[0][-1], self.output_units),
                                               initializer='glorot_uniform',
                                               trainable=True,
                                               regularizer=self.output_regularizer)
 
-    def call(self, features, labels):
+    def call(self, inputs):
+
+        features = inputs[0]
+        labels = inputs[1]
         # features and weights normalization
         features_norm = tf.math.reduce_euclidean_norm(features, axis=1, keepdims=True)
         normalized_features = tf.math.divide(features, features_norm)

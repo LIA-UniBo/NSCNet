@@ -100,7 +100,7 @@ class Generator(tf.keras.utils.Sequence):
             augment_batch_func = lambda x: spec_augmentation.augment(x, **policy)
             batch_x = list(map(augment_batch_func, batch_x))
 
-        return np.array(batch_x), np.array(batch_y)
+        return [np.array(batch_x), np.array(batch_y)], np.array(batch_y)
 
     def on_epoch_end(self):
 
@@ -205,7 +205,7 @@ class Generator(tf.keras.utils.Sequence):
 
         if len(self.nmi_scores) >= patience:
             last_scores = self.nmi_scores[-patience:]  # Take N=patience+1 last scores
-            delta_scores = -np.diff(last_scores)  # Compute deltas between consecutive scores (epochs)
+            delta_scores = np.diff(last_scores)  # Compute deltas between consecutive scores (epochs)
             no_improvemements = np.all(delta_scores < min_delta)  # Check if there is no improvement in all of them
 
             # Stop the training

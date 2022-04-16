@@ -30,11 +30,12 @@ POOLING = "max"
 DIM_REPRESENTATION = 512
 
 
-LEARNING_RATE = 1e-3
-OPTIMIZER = tf.keras.optimizers.Adam(LEARNING_RATE)
+LEARNING_RATE = 2*1e-3
+#OPTIMIZER = tf.keras.optimizers.Adam(LEARNING_RATE)
+OPTIMIZER = tf.keras.optimizers.SGD(learning_rate=LEARNING_RATE, momentum=0.9)
 LOSS = tf.keras.losses.SparseCategoricalCrossentropy()
 BATCH_SIZE = 32
-EPOCHS = 50
+EPOCHS = 100
 BATCHES_PER_EPOCH = 1
 
 USE_ARCFACE_LOSS = False
