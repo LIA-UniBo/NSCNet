@@ -9,7 +9,7 @@ from architectures.nscnet.pseudo_labels_generator import Generator
 
 class ConvNet(tf.keras.Model):
 
-    def __init__(self, input_shape, pooling, linear_units):
+    def __init__(self, input_shape, pooling, linear_units, activation='relu'):
         super(ConvNet, self).__init__()
 
         self.efficient_net = tf.keras.applications.EfficientNetB0(include_top=False,
@@ -17,7 +17,7 @@ class ConvNet(tf.keras.Model):
                                                                   input_shape=input_shape,
                                                                   pooling=pooling)
 
-        self.linear_layer = layers.Dense(linear_units, activation="relu")
+        self.linear_layer = layers.Dense(linear_units, activation=activation)
 
         self.force_stop = False
 
@@ -76,7 +76,7 @@ class NSCNet:
 
         self.checkpoint_path = os.path.join(config.WEIGHTS_PATH, "checkpoint {}.ckpt".format(self.weights_name))
 
-        self.model = self.build_model(self.n_clusters, input_shape)
+        self.model = self.build_model(self.n_clusters, input_shape, config.ACTIVATION)
 
         if config.LOAD_WEIGHTS:
             if os.path.exists(self.checkpoint_path + ".index"):
@@ -91,14 +91,15 @@ class NSCNet:
         self.model.summary()
         print('NSCNet initialization completed.')
 
-    def build_model(self, n_clusters, input_shape):
+    def build_model(self, n_clusters, input_shape, activation='relu'):
 
         model_input_x = tf.keras.Input(shape=input_shape)
         model_input_y = tf.keras.Input(shape=(1,), dtype=tf.int32)
 
         conv_net = ConvNet(input_shape,
                            config.POOLING,
-                           config.DIM_REPRESENTATION)
+                           config.DIM_REPRESENTATION,
+                           activation=activation)
 
         model = Classifier(conv_net,
                            n_clusters,

@@ -2,6 +2,9 @@
 
 import tensorflow as tf
 import os
+
+from tensorflow_addons.optimizers import extend_with_decoupled_weight_decay
+
 from architectures.common import spec_augmentation
 
 SAVE_WEIGHTS = True
@@ -39,3 +42,8 @@ EPOCHS = 100
 BATCHES_PER_EPOCH = 1
 
 USE_ARCFACE_LOSS = False
+
+customSGD = extend_with_decoupled_weight_decay(tf.keras.optimizers.SGD)
+OPTIMIZER = customSGD(weight_decay=1e-4, learning_rate=0.05)
+
+ACTIVATION = 'relu'
