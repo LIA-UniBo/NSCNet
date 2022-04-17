@@ -35,9 +35,9 @@ def create_inputs(dummy_dataset=False):
     return inputs
 
 
-def vaenet():
+def vaenet(train_only=False):
     inputs = init()
-    vaenet_trainer = VAENetTrainer()
+    vaenet_trainer = VAENetTrainer(train_only=train_only)
     vaenet_trainer.kmeans(inputs)
     vaenet_trainer.dbscan(inputs)
 
