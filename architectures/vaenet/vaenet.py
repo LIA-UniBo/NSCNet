@@ -202,8 +202,6 @@ class VAENet:
 
     def __init__(self, input_shape, cluster_dic, debug=False):
 
-        self.model = self.build_model(input_shape)
-
         # self.weights_name = cluster_dic['name']
         self.weights_name = 'VAENet'
         self.cluster_args = cluster_dic['config']
@@ -265,7 +263,7 @@ class VAENet:
         return history
 
     def save_test_images(self, data):
-        mean_x, log_var_x, compressed_shape = self.model.encode(data)
+        mean_x, log_var_x, compressed_shape = self.model.encode(data[:100])
 
         z = self.model.sample(mean_x, log_var_x)
         decoded_x = self.model.decode(z, compressed_shape)
