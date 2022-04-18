@@ -200,7 +200,7 @@ class ConvolutionalVAE(tf.keras.Model):
 
 class VAENet:
 
-    def __init__(self, input_shape, cluster_dic):
+    def __init__(self, input_shape, cluster_dic, debug=False):
 
         self.model = self.build_model(input_shape)
 
@@ -209,6 +209,7 @@ class VAENet:
         self.cluster_args = cluster_dic['config']
         self.cluster_method = cluster_dic['method']
         self.config = config
+        self.debug = debug
 
         self.checkpoint_path = os.path.join(config.WEIGHTS_PATH, "checkpoint {}.ckpt".format(self.weights_name))
 
@@ -257,7 +258,9 @@ class VAENet:
                                  verbose=1)
 
         # TODO: to remove, just for test.
-        # save_test_images(data, model)
+        if self.debug:
+            print("DEBUG: Saving image data...")
+            self.save_test_images(data)
 
         return history
 
@@ -267,9 +270,9 @@ class VAENet:
         z = self.model.sample(mean_x, log_var_x)
         decoded_x = self.model.decode(z, compressed_shape)
         for i, img in enumerate(data[:100]):
-            plt.imsave(f'data/original/{i}.png', np.squeeze(img, axis=-1), cmap='gray')
+            plt.imsave(f'data/original/{i}.png', np.squeeze(img, axis=-1))
         for i, img in enumerate(decoded_x[:100]):
-            plt.imsave(f'data/decoded/{i}.png', np.squeeze(img.numpy(), axis=-1), cmap='gray')
+            plt.imsave(f'data/decoded/{i}.png', np.squeeze(img.numpy(), axis=-1))
 
     def compute_clusters(self, samples):
         # TODO: predict in batches

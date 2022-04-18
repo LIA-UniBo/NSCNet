@@ -322,14 +322,15 @@ class NSCNetTrainer(NetworkTrainer):
 
 class VAENetTrainer(NetworkTrainer):
 
-    def __init__(self, result_dir='train/results/VAENet', train_only=False):
+    def __init__(self, result_dir='train/results/VAENet', train_only=False, debug=False):
         super().__init__('VAENet', result_dir)
         self.vaenet = None
         self.train_only = train_only
+        self.debug = debug
 
     def train(self, cluster_dic, inputs):
         if self.vaenet is None:
-            self.vaenet = VAENet(config.INPUT_SHAPE, cluster_dic)
+            self.vaenet = VAENet(config.INPUT_SHAPE, cluster_dic, self.debug)
 
             if not self.vaenet.model_already_trained:
                 self.vaenet.train_model(inputs)
