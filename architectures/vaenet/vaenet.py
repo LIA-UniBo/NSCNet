@@ -268,18 +268,24 @@ class VAENet:
         z = self.model.sample(mean_x, log_var_x)
         decoded_x = self.model.decode(z, compressed_shape)
         for i, img in enumerate(data[:100]):
-            plt.imsave(f'data/original/{i}.png', np.squeeze(img, axis=-1))
+            plt.imsave(f'data/original/{i}.png', img)
         for i, img in enumerate(decoded_x[:100]):
-            plt.imsave(f'data/decoded/{i}.png', np.squeeze(img.numpy(), axis=-1))
+            plt.imsave(f'data/decoded/{i}.png', img.numpy())
 
     def compute_clusters(self, samples):
-        # TODO: predict in batches
+        features = [] 
+        n_samples = samples.shape[0]
+
+        for i in range (0, n_samples, config.BATCH_SIZE):
+            batch = samples[i:i+config.BATCH_SIZE]
+            z_mean, z_var = self.model.encode(batch)
+            features.append(self.model.sample(z_mean, z_var))
 
         if self.cluster_method not in clustering.CLUSTERING_METHODS:
             raise Exception("cluster method must be one between " + ",".join(clustering.CLUSTERING_METHODS))
 
-        z_mean, z_log_var, compressed_shape = self.model.encode(samples)
-        features = self.model.sample(z_mean, z_log_var)
+        #z_mean, z_log_var, compressed_shape = self.model.encode(samples)
+        #features = self.model.sample(z_mean, z_log_var)
 
         clustering_output = None
         if self.cluster_method == "kmeans":
