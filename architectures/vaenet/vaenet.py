@@ -279,7 +279,7 @@ class VAENet:
         for i in range (0, n_samples, config.BATCH_SIZE):
             batch = samples[i:i+config.BATCH_SIZE]
             z_mean, z_var, _ = self.model.encode(batch)
-            features.append(self.model.sample(z_mean, z_var))
+            features.extend(self.model.sample(z_mean, z_var))
 
         if self.cluster_method not in clustering.CLUSTERING_METHODS:
             raise Exception("cluster method must be one between " + ",".join(clustering.CLUSTERING_METHODS))
