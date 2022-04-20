@@ -33,9 +33,9 @@ POOLING = "max"
 DIM_REPRESENTATION = 512
 
 
-LEARNING_RATE = 2*1e-3
-#OPTIMIZER = tf.keras.optimizers.Adam(LEARNING_RATE)
-OPTIMIZER = tf.keras.optimizers.SGD(learning_rate=LEARNING_RATE, momentum=0.9)
+LEARNING_RATE = 1e-4
+OPTIMIZER = tf.keras.optimizers.Adam(LEARNING_RATE)
+# OPTIMIZER = tf.keras.optimizers.SGD(learning_rate=LEARNING_RATE, momentum=0.9)
 LOSS = tf.keras.losses.SparseCategoricalCrossentropy()
 BATCH_SIZE = 32
 EPOCHS = 100
@@ -43,7 +43,7 @@ BATCHES_PER_EPOCH = 1
 
 USE_ARCFACE_LOSS = False
 
-customSGD = extend_with_decoupled_weight_decay(tf.keras.optimizers.SGD)
-OPTIMIZER = customSGD(weight_decay=1e-4, learning_rate=0.05)
+# customSGD = extend_with_decoupled_weight_decay(tf.keras.optimizers.SGD)
+# OPTIMIZER = customSGD(weight_decay=1e-4, learning_rate=0.05)
 
-ACTIVATION = 'relu'
+ACTIVATION = tf.keras.layers.LeakyReLU(alpha=0.01)
