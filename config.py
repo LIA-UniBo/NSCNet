@@ -1,5 +1,3 @@
-import itertools
-
 RGB_NORMALIZATION = True
 IMAGES_PATH = "data"
 INPUT_SHAPE = (64, 512, 3)

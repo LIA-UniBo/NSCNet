@@ -200,15 +200,14 @@ class ConvolutionalVAE(tf.keras.Model):
 
 class VAENet:
 
-    def __init__(self, input_shape, cluster_dic):
-
-        self.model = self.build_model(input_shape)
+    def __init__(self, input_shape, cluster_dic, debug=False):
 
         # self.weights_name = cluster_dic['name']
         self.weights_name = 'VAENet'
         self.cluster_args = cluster_dic['config']
         self.cluster_method = cluster_dic['method']
         self.config = config
+        self.debug = debug
 
         self.checkpoint_path = os.path.join(config.WEIGHTS_PATH, "checkpoint {}.ckpt".format(self.weights_name))
 
@@ -257,28 +256,36 @@ class VAENet:
                                  verbose=1)
 
         # TODO: to remove, just for test.
-        # save_test_images(data, model)
+        if self.debug:
+            print("DEBUG: Saving image data...")
+            self.save_test_images(data)
 
         return history
 
     def save_test_images(self, data):
-        mean_x, log_var_x, compressed_shape = self.model.encode(data)
+        mean_x, log_var_x, compressed_shape = self.model.encode(data[:100])
 
         z = self.model.sample(mean_x, log_var_x)
         decoded_x = self.model.decode(z, compressed_shape)
         for i, img in enumerate(data[:100]):
-            plt.imsave(f'data/original/{i}.png', np.squeeze(img, axis=-1), cmap='gray')
+            plt.imsave(f'data/original/{i}.png', img)
         for i, img in enumerate(decoded_x[:100]):
-            plt.imsave(f'data/decoded/{i}.png', np.squeeze(img.numpy(), axis=-1), cmap='gray')
+            plt.imsave(f'data/decoded/{i}.png', img.numpy())
 
     def compute_clusters(self, samples):
-        # TODO: predict in batches
+        features = [] 
+        n_samples = samples.shape[0]
+
+        for i in range (0, n_samples, config.BATCH_SIZE):
+            batch = samples[i:i+config.BATCH_SIZE]
+            z_mean, z_var, _ = self.model.encode(batch)
+            features.extend(self.model.sample(z_mean, z_var))
 
         if self.cluster_method not in clustering.CLUSTERING_METHODS:
             raise Exception("cluster method must be one between " + ",".join(clustering.CLUSTERING_METHODS))
 
-        z_mean, z_log_var, compressed_shape = self.model.encode(samples)
-        features = self.model.sample(z_mean, z_log_var)
+        #z_mean, z_log_var, compressed_shape = self.model.encode(samples)
+        #features = self.model.sample(z_mean, z_log_var)
 
         clustering_output = None
         if self.cluster_method == "kmeans":
