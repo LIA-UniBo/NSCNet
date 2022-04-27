@@ -8,9 +8,17 @@ import json
 from collections import Counter
 
 '''
-References and useful links:
+REFERENCES AND USEFUL LINKS:
+
+Wikipedia:
 https://en.wikipedia.org/wiki/Zipf's_law
+https://en.wikipedia.org/wiki/Kolmogorov-Smirnov_test
+https://en.wikipedia.org/wiki/Chi-squared_test
+
+Paper:
 https://arxiv.org/abs/0706.1062
+
+Others:
 http://bactra.org/weblog/491.html
 https://stats.stackexchange.com/questions/264431/how-to-determine-if-zipfs-law-can-be-applied
 https://stats.stackexchange.com/questions/6780/how-to-calculate-zipfs-law-coefficient-from-a-set-of-top-frequencies
