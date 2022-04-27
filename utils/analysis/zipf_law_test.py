@@ -26,12 +26,13 @@ https://stats.stackexchange.com/questions/6780/how-to-calculate-zipfs-law-coeffi
 
 class ZipfEstimator:
 
-    def __init__(self, estimation_method="mle"):
+    def __init__(self, estimation_method="mle", restrict=None):
 
         if estimation_method not in ["mle","mse"]:
             raise Exception("Estimation method must be one between 'mle' and 'mse'")
 
-        self.estimation_method=estimation_method
+        self.estimation_method = estimation_method
+        self.restrict = restrict
 
         self.s = None
 
@@ -48,6 +49,8 @@ class ZipfEstimator:
     def fit(self, frequencies):
 
         self.frequencies = np.array(frequencies)
+        if self.restrict is not None:
+            self.frequencies = self.frequencies[0:min(len(self.frequencies),self.restrict)]
         self.distribution = self._frequencies_to_probabilities(frequencies)
 
         objective_function = lambda s: self._mse_estimation(s) if self.estimation_method=="mse" else self._log_likelihood_estimation(s)
@@ -202,7 +205,7 @@ def zipf_estimation(json_path):
         c = Counter(clusters_labels)
         frequencies = [element[1] for element in c.most_common()]
 
-        zipf = ZipfEstimator(estimation_method="mle")
+        zipf = ZipfEstimator(estimation_method="mle", restrict=None)
         zipf.fit(frequencies)
         zipf.goodness_of_fit()
 
