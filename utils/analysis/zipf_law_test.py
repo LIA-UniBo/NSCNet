@@ -7,6 +7,15 @@ from scipy.stats import ks_2samp, chisquare, zipfian
 import json
 from collections import Counter
 
+'''
+References and useful links:
+https://en.wikipedia.org/wiki/Zipf's_law
+https://arxiv.org/abs/0706.1062
+http://bactra.org/weblog/491.html
+https://stats.stackexchange.com/questions/264431/how-to-determine-if-zipfs-law-can-be-applied
+https://stats.stackexchange.com/questions/6780/how-to-calculate-zipfs-law-coefficient-from-a-set-of-top-frequencies
+'''
+
 class ZipfEstimator:
 
     def __init__(self, estimation_method="mle"):
