@@ -194,7 +194,7 @@ def test():
 #-------------------------------------------------------------------------------
 #Main
 
-def zipf_estimation(json_path):
+def zipf_estimation(json_path, estimation_method="mle", restrict=None):
 
     #test()
 
@@ -205,7 +205,7 @@ def zipf_estimation(json_path):
         c = Counter(clusters_labels)
         frequencies = [element[1] for element in c.most_common()]
 
-        zipf = ZipfEstimator(estimation_method="mle", restrict=None)
+        zipf = ZipfEstimator(estimation_method=estimation_method, restrict=restrict)
         zipf.fit(frequencies)
         zipf.goodness_of_fit()
 
