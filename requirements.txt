@@ -8,3 +8,4 @@ matplotlib
 pydub
 librosa
 sklearn
+scipy
