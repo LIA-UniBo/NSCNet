@@ -39,7 +39,6 @@ class ArcFace(tf.keras.layers.Layer):
         normalized_weights = tf.math.divide(self.custom_weights, weights_norm)
 
         # dot product that returns the so called "cos(θ)" in the paper
-        # TODO: move the following comment to the project relation
         """
         The dot product between two vectors can be written as
         
@@ -58,7 +57,6 @@ class ArcFace(tf.keras.layers.Layer):
         cos_theta = tf.tensordot(normalized_features, normalized_weights, axes=1)
 
         # Compute scale * cos(θ + margin)
-        # TODO: move the following comment to the project relation
         """
         Use the trigonometric function
         sin^2(θ) = 1 - cos^2(θ)
@@ -75,10 +73,9 @@ class ArcFace(tf.keras.layers.Layer):
         cos_theta_arcface_scaled = tf.math.multiply(self.scale, cos_theta_arcface)
 
         # Constraint θ + margin < π
-        # TODO: move the following comment to the project relation
         """
         θ is the angle between two vectors.
-        By definition, this he angle between two vectors is defined as the minimum non-negative angle 
+        By definition, the angle between two vectors is defined as the minimum non-negative angle 
         separating their directions. Therefore, the allowed values are in the range [0, π].
         
         Nevertheless, when the margin is added we could exceed π, and this is something we want to avoid, 
