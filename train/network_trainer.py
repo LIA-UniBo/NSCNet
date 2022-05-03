@@ -15,6 +15,11 @@ from architectures.common.visualizer import visualize_clusters, visualize_cluste
 
 
 class NetworkTrainer:
+    """
+    Generic class that wraps all the methods required for training a network, and eventually saving its results.
+    This class allows the application of a specific clustering algorithm (e.g., k-means and dbscan)
+    Cannot be used directly, because it contains abstract methods.
+    """
 
     def __init__(self, network_name, results_dir):
         self.network_name = network_name
@@ -93,9 +98,36 @@ class NetworkTrainer:
         return
 
     def _create_file_path_prefix(self, clustering_method):
+        """
+        Utility method for creating a file name prefix. This name is used for saving the training results of
+        a network that uses a specific clustering algorithm.
+
+        Parameters
+        ----------
+        clustering_method: string
+            the name of the clustering method applied
+
+        Returns
+        -------
+        result: String
+            The created prefix
+        """
         return f'{os.path.join(self.results_dir, self.network_name)}_{clustering_method}'
 
     def _save_training_results(self, cluster_dic, clustering_output, features):
+        """
+        Methods that saves a 2d distribution representation of the samples, and the resulting distribution in each
+        cluster.
+
+        Parameters
+        ----------
+        cluster_dic: dict
+            Dictionary containing all the information related to the applied clustering algorithm.
+        clustering_output: dict
+            Dictionary containing the results of the applied clustering algorithm (e.g., the labels)
+        features: ndarray
+            The features extracted from the input from the backbone of the currently used network.
+        """
 
         file_name = cluster_dic['name']
         cluster_args = cluster_dic['config']
@@ -113,7 +145,7 @@ class NetworkTrainer:
         # Save image showing clusters
         visualize_clusters(features, clustering_output["labels"], file_path=file_name + '.png')
         # Save image showing clusters distribution
-        visualize_clusters_distribution(clustering_output["labels"],file_path=file_name + '_distribution.png')
+        visualize_clusters_distribution(clustering_output["labels"], file_path=file_name + '_distribution.png')
         # Save dictionary results
         json_file_name = file_name + '.json'
         with open(json_file_name, 'w') as f:
@@ -123,6 +155,14 @@ class NetworkTrainer:
         self.saved_json_file_paths.append(file_name + '.json')
 
     def _save_dbscan_training_plots(self, results_dir):
+        """
+        Create plots according to the DBSCAN clustering results.
+
+        Parameters
+        ----------
+        results_dir: string
+            The path where the results must be saved
+        """
 
         silhouette = []
         eps = []
@@ -176,6 +216,14 @@ class NetworkTrainer:
         #                                      f'{results_dir}_SILHOUETTE_PLOTS.png')
 
     def _save_kmeans_training_plots(self, results_dir):
+        """
+        Create plots according to the k-means clustering results.
+
+        Parameters
+        ----------
+        results_dir: string
+            The path where the results must be saved
+        """
 
         k = []
         silhouette = []
@@ -289,6 +337,9 @@ class NetworkTrainer:
 
 
 class NSCNetTrainer(NetworkTrainer):
+    """
+    Class responsible of training the NSCNet
+    """
 
     def __init__(self, result_dir='train/results/NSCNet'):
         super().__init__('NSCNet', result_dir)
@@ -307,11 +358,10 @@ class NSCNetTrainer(NetworkTrainer):
         print('This architecture does not support the DBSCAN algorithm')
 
     def _save_training_results(self, cluster_dic, clustering_output, features, nmi_scores):
-
         super()._save_training_results(cluster_dic, clustering_output, features)
 
-        #Save NMI scores
-        epochs = list(range(1, len(nmi_scores)+1))
+        # Save NMI scores
+        epochs = list(range(1, len(nmi_scores) + 1))
 
         fig = plt.figure()
         plt.plot(epochs, nmi_scores)
@@ -320,11 +370,14 @@ class NSCNetTrainer(NetworkTrainer):
         plt.xlabel('Epochs')
         plt.ylabel('NMI')
 
-        plt.savefig(cluster_dic['name']+"_nmi.png", bbox_inches='tight')
+        plt.savefig(cluster_dic['name'] + "_nmi.png", bbox_inches='tight')
         plt.close(fig)
 
 
 class VAENetTrainer(NetworkTrainer):
+    """
+    Class responsible of training the VAENet
+    """
 
     def __init__(self, result_dir='train/results/VAENet', train_only=False, debug=False):
         super().__init__('VAENet', result_dir)
@@ -347,6 +400,9 @@ class VAENetTrainer(NetworkTrainer):
 
 
 class BASENetTrainer(NetworkTrainer):
+    """
+    Class responsible of training the BASENet
+    """
 
     def __init__(self, result_dir='train/results/BASENet'):
         super().__init__('BASENet', result_dir)
@@ -354,7 +410,6 @@ class BASENetTrainer(NetworkTrainer):
         self.basenet = None
 
     def train(self, cluster_dic, inputs):
-
         self.basenet = BaseNet(cluster_dic)
 
         self.basenet.cluster_args['compute_scores'] = True

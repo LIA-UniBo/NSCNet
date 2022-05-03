@@ -5,6 +5,9 @@ import numpy as np
 
 
 class BaseNet:
+    """
+    Class responsible for creating the BASENet, and exposing training and inference methods.
+    """
 
     def __init__(self, cluster_dic):
         self.cluster_args = cluster_dic['config']

@@ -8,6 +8,9 @@ from architectures.nscnet.pseudo_labels_generator import Generator
 
 
 class ConvNet(tf.keras.Model):
+    """
+    NSCNet's feature extractor
+    """
 
     def __init__(self, input_shape, pooling, linear_units, activation='relu'):
         super(ConvNet, self).__init__()
@@ -29,6 +32,9 @@ class ConvNet(tf.keras.Model):
 
 
 class Classifier(tf.keras.Model):
+    """
+    NSCNet's head, responsible for performing the final classification task
+    """
 
     def __init__(self, conv_net, n_clusters, use_arcface=False):
         super(Classifier, self).__init__()
@@ -56,7 +62,9 @@ class Classifier(tf.keras.Model):
 
 
 class CustomEarlyStop(tf.keras.callbacks.Callback):
-
+    """
+    NSCNet's custom method for managing the early stopping. A custom method is required due to NMI computation.
+    """
     def on_epoch_end(self, epoch, logs=None):
         if self.model.conv_net.force_stop:
             print("\nEarly stopping...")
@@ -64,6 +72,9 @@ class CustomEarlyStop(tf.keras.callbacks.Callback):
 
 
 class NSCNet:
+    """
+    Class responsible of creating the NSCNet, and exposing training and inference methods.
+    """
     def __init__(self, input_shape, cluster_dic):
 
         self.weights_name = cluster_dic['name']

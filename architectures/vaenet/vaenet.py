@@ -9,6 +9,9 @@ import matplotlib.pyplot as plt
 
 
 class Encoder(tf.keras.Model):
+    """
+    VAENet's encoder creation and management
+    """
 
     def __init__(self, stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers, dense_units,
                  activation="relu"):
@@ -57,6 +60,9 @@ class Encoder(tf.keras.Model):
 
 
 class Decoder(tf.keras.Model):
+    """
+    VAENet's decoder creation and management
+    """
 
     def __init__(self, stride, kernel_size, padding, starting_filters, n_conv_layers, input_shape, dense_units,
                  activation="relu"):
@@ -121,7 +127,9 @@ class Decoder(tf.keras.Model):
 
 
 class ConvolutionalVAE(tf.keras.Model):
-
+    """
+    Wrapper class that merges together the Encoder and the Decoder parts of the VAE.
+    """
     def __init__(self,
                  stride,
                  kernel_size,
@@ -202,6 +210,9 @@ class ConvolutionalVAE(tf.keras.Model):
 
 
 class VAENet:
+    """
+    Class responsible of creating the VAENet, and exposing training and inference methods.
+    """
 
     def __init__(self, input_shape, cluster_dic, debug=False):
 
