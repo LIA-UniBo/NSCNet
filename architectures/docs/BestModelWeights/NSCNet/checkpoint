@@ -1,0 +1,2 @@
+model_checkpoint_path: "NSCNet_kmeans_K256.ckpt"
+all_model_checkpoint_paths: "NSCNet_kmeans_K256.ckpt"

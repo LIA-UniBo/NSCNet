@@ -347,7 +347,9 @@ class NSCNetTrainer(NetworkTrainer):
 
     def train(self, cluster_dic, inputs):
         self.nscnet = NSCNet(config.INPUT_SHAPE, cluster_dic)
-        history, nmi_scores = self.nscnet.train_model(inputs)
+        # history, nmi_scores = self.nscnet.train_model(inputs)
+
+        nmi_scores = []
 
         self.nscnet.cluster_args['compute_scores'] = True
         clustering_output, features = self.nscnet.compute_clusters(inputs)

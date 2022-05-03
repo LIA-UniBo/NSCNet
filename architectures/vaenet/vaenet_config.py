@@ -13,7 +13,7 @@ PADDING = "same"
 STARTING_FILTERS = 16
 
 DENSE_UNITS = 1024  # Number of the first dense layer applied after the last convolutional one
-LATENT_DIM = 256  # The latent space dimension 
+LATENT_DIM = 256  # The latent space dimension
 N_CONV_LAYERS = 5  # Number of convolutional layers that will be applied in both VAE sides (e.g., Encoder and Decoder)
 
 # Model parameters

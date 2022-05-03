@@ -12,9 +12,9 @@ WEIGHTS_PATH = os.path.join("architectures", "weights", "nscnet")
 
 # Operations computed before executing the clustering algorithm
 POST_PROCESSING_OPTIONS = {
-    "normalize": True,
-    "pca": 128,
-    "whiten": True,
+    "normalize": False,
+    "pca": 256,
+    "whiten": False,
     "l2 normalize": True
 }
 
