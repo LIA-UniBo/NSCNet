@@ -1,8 +1,6 @@
-from sklearn.neighbors import NearestNeighbors
-
 import architectures.basenet.basenet_config as config
 from architectures.common import clustering, matrix_manipulation
-import matplotlib.pyplot as plt
+
 import numpy as np
 
 
@@ -37,23 +35,6 @@ class BaseNet:
         # Avoid to compute multiple times the same operation during different training
         if features is None:
             features = self.compress_data(data, **config.COMPRESSION_PROCESSING_OPTIONS)
-
-        '''
-        # # TODO: this could be useful for finding the EPS
-        for i in range(2, 50):
-            fig = plt.figure()
-            neighbors = NearestNeighbors(n_neighbors=i)
-            neighbors_fit = neighbors.fit(features)
-            distances, indices = neighbors_fit.kneighbors(features)
-            distances = np.sort(distances, axis=0)
-            distances = distances[:, 1]
-            plt.plot(distances)
-            # plt.show(block=True)
-
-            plt.savefig(f'{i}.png', bbox_inches='tight')
-            plt.close(fig)
-        return
-        '''
 
         clustering_output = None
         if self.cluster_method == "kmeans":

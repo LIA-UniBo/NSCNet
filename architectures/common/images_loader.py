@@ -9,7 +9,6 @@ from architectures.common import matrix_manipulation
 def import_image_tf_dataset(path, batch_size, input_shape, shuffle=True):
 
     # Load all the images in a path and create a tensor dataset
-
     dataset = tf.keras.preprocessing.image_dataset_from_directory(
         path,
         labels=None,

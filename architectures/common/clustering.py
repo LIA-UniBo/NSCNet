@@ -75,6 +75,8 @@ def dbscan(x, eps, min_samples, metric="euclidean", compute_scores=False, **kwar
     Dictionary:
         labels -> clustered labels for the sample points
     """
+
+    # Code left for easily switch to DBSCAN, if required
     '''
     dbscan_clustering = DBSCAN(eps=eps,
                                min_samples=min_samples,

@@ -167,6 +167,8 @@ class NetworkTrainer:
         plt.savefig(file_path, bbox_inches='tight')
         plt.close(fig)
 
+        # Currently not used, but could be useful to see the silhouette score for each sample.
+        # (WARNING: the method its not visually optimized when the number of clusters is very high)
         # self._create_silhouette_samples_plot(cluster_labels,
         #                                      silhouette_sample_scores,
         #                                      dbscan_clusters,
@@ -213,6 +215,8 @@ class NetworkTrainer:
         plt.savefig(file_path, bbox_inches='tight')
         plt.close(fig)
 
+        # Currently not used, but could be useful to see the silhouette score for each sample.
+        # (WARNING: the method its not visually optimized when the number of clusters is very high)
         # self._create_silhouette_samples_plot(cluster_labels,
         #                                      silhouette_sample_scores,
         #                                      k,
@@ -307,7 +311,7 @@ class NSCNetTrainer(NetworkTrainer):
         super()._save_training_results(cluster_dic, clustering_output, features)
 
         #Save NMI scores
-        epochs = list(range(1,len(nmi_scores)+1))
+        epochs = list(range(1, len(nmi_scores)+1))
 
         fig = plt.figure()
         plt.plot(epochs, nmi_scores)

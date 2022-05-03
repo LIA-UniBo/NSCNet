@@ -85,17 +85,6 @@ class ClusterSampler:
 
             batch_indices.append(random_cluster_index)
 
-            '''
-            # Add the element to the batch
-            if random_cluster_index in self.usable_element_indices or not self.use_all_dataset:
-                batch_indices.append(random_cluster_index)
-                self.usable_element_indices.remove(random_cluster_index)
-            else:
-                random_cluster_index = np.random.choice(self.usable_element_indices)
-                batch_indices.append(random_cluster_index)
-                self.usable_element_indices.remove(random_cluster_index)
-            '''
-
         # Create the batch taking the samples from the collected indices
         batch_x = np.take(x, batch_indices, axis=0)
         batch_y = np.take(y, batch_indices, axis=0)

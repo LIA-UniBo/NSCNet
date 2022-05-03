@@ -20,7 +20,7 @@ def get_chromagrams(path):
 
 def plot_chromagram(chromagram, file_path=None):
     fig = plt.figure()
-    #, y_axis='chroma', x_axis='time'
+    # , y_axis='chroma', x_axis='time'
     img = librosa.display.specshow(chromagram)
     plt.colorbar()
     # plt.imshow(img)

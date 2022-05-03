@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 
 class Encoder(tf.keras.Model):
 
-    def __init__(self, stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers, dense_units, activation="relu"):
+    def __init__(self, stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers, dense_units,
+                 activation="relu"):
         super(Encoder, self).__init__()
 
         self.conv_layers = [layers.Conv2D(starting_filters * 2 ** (i - 1),
@@ -23,12 +24,12 @@ class Encoder(tf.keras.Model):
                             for i in range(1, n_conv_layers + 1)]
 
         self.last_conv = layers.Conv2D(starting_filters * 2 ** (n_conv_layers - 1),
-                                        kernel_size,
-                                        strides=stride,
-                                        padding=padding,
-                                        data_format="channels_last",
-                                        activation=activation,
-                                        name=f'encoder_conv_{n_conv_layers + 1}')
+                                       kernel_size,
+                                       strides=stride,
+                                       padding=padding,
+                                       data_format="channels_last",
+                                       activation=activation,
+                                       name=f'encoder_conv_{n_conv_layers + 1}')
 
         self.flatten_layer = layers.Flatten()
 
@@ -38,7 +39,6 @@ class Encoder(tf.keras.Model):
         self.std_dense_layer = layers.Dense(latent_dim, activation=activation, name="std")
 
     def call(self, x):
-
         for conv_layer in self.conv_layers:
             x = conv_layer(x)
 
@@ -58,7 +58,8 @@ class Encoder(tf.keras.Model):
 
 class Decoder(tf.keras.Model):
 
-    def __init__(self, stride, kernel_size, padding, starting_filters, n_conv_layers, input_shape, dense_units, activation="relu"):
+    def __init__(self, stride, kernel_size, padding, starting_filters, n_conv_layers, input_shape, dense_units,
+                 activation="relu"):
 
         super(Decoder, self).__init__()
 
@@ -101,7 +102,7 @@ class Decoder(tf.keras.Model):
 
         if self.dense_layer_2 is None:
             self.dense_layer_2 = layers.Dense(compressed_shape[1] * compressed_shape[2] * compressed_shape[3],
-                                            activation=self.activation)
+                                              activation=self.activation)
             self.reshape_layer = layers.Reshape((compressed_shape[1], compressed_shape[2], compressed_shape[3]))
 
         x = self.dense_layer_1(x)
@@ -133,8 +134,10 @@ class ConvolutionalVAE(tf.keras.Model):
                  activation="relu"):
         super(ConvolutionalVAE, self).__init__()
 
-        self.encoder = Encoder(stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers, dense_units, activation)
-        self.decoder = Decoder(stride, kernel_size, padding, starting_filters, n_conv_layers, input_shape, dense_units, activation)
+        self.encoder = Encoder(stride, kernel_size, padding, starting_filters, latent_dim, n_conv_layers, dense_units,
+                               activation)
+        self.decoder = Decoder(stride, kernel_size, padding, starting_filters, n_conv_layers, input_shape, dense_units,
+                               activation)
 
         self.total_loss_tracker = metrics.Mean(name="total_loss")
         self.reconstruction_loss_tracker = metrics.Mean(name="reconstruction_loss")
@@ -202,7 +205,6 @@ class VAENet:
 
     def __init__(self, input_shape, cluster_dic, debug=False):
 
-        # self.weights_name = cluster_dic['name']
         self.weights_name = 'VAENet'
         self.cluster_args = cluster_dic['config']
         self.cluster_method = cluster_dic['method']
@@ -247,7 +249,8 @@ class VAENet:
 
         callbacks = []
         if config.SAVE_WEIGHTS:
-            callbacks.append(tf.keras.callbacks.ModelCheckpoint(filepath=self.checkpoint_path, save_weights_only=True, verbose=1))
+            callbacks.append(
+                tf.keras.callbacks.ModelCheckpoint(filepath=self.checkpoint_path, save_weights_only=True, verbose=1))
 
         history = self.model.fit(data,
                                  epochs=self.config.EPOCHS,
@@ -273,19 +276,19 @@ class VAENet:
             plt.imsave(f'data/decoded/{i}.png', img.numpy())
 
     def compute_clusters(self, samples):
-        features = [] 
+        features = []
         n_samples = samples.shape[0]
 
-        for i in range (0, n_samples, config.BATCH_SIZE):
-            batch = samples[i:i+config.BATCH_SIZE]
+        for i in range(0, n_samples, config.BATCH_SIZE):
+            batch = samples[i:i + config.BATCH_SIZE]
             z_mean, z_var, _ = self.model.encode(batch)
             features.extend(self.model.sample(z_mean, z_var))
 
         if self.cluster_method not in clustering.CLUSTERING_METHODS:
             raise Exception("cluster method must be one between " + ",".join(clustering.CLUSTERING_METHODS))
 
-        #z_mean, z_log_var, compressed_shape = self.model.encode(samples)
-        #features = self.model.sample(z_mean, z_log_var)
+        # z_mean, z_log_var, compressed_shape = self.model.encode(samples)
+        # features = self.model.sample(z_mean, z_log_var)
 
         clustering_output = None
         if self.cluster_method == "kmeans":
