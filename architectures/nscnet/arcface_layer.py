@@ -80,7 +80,7 @@ class ArcFace(tf.keras.layers.Layer):
         
         Nevertheless, when the margin is added we could exceed π, and this is something we want to avoid, 
         because the application of the margin would be counteproductive. When this happens, then it is applied 
-        the CosFace loss, which seems to work better.
+        the CosFace loss, which empirically seems to work better.
         
         References:
         https://github.com/ronghuaiyang/arcface-pytorch/issues/24#issue-428144388
