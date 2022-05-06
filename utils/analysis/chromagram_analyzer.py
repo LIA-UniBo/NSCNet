@@ -1,3 +1,9 @@
+"""
+This module contains methods for doing some analysis on chromagrams, in particular based on a purity
+metric. The chosen puritry metric is the entropy.
+Refer to the Project Report for further details.
+"""
+
 import librosa
 import librosa.display
 import encoding
