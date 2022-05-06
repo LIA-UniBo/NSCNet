@@ -31,5 +31,5 @@ Parameters can be optionally changed by accessing the *config.py* file in the ma
 Results are stored in the *train* folder and they can be compared with Zipf's distribution by launching *utils/analysis/zipf_law_test.py*.
 
 ## Weights
-The best trained weights for the models can be found here:
+The best trained weights for the NSCNet can be found here:
 https://drive.google.com/drive/folders/1Iq2Y7q4eUzBbw2xZtSV3GFtIoJT4PpDC?usp=sharing
