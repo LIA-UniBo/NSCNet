@@ -111,6 +111,9 @@ max_length = max(len(pitches_vector) for pitches_vector in pitches_vectors)
 for pitches_vector in pitches_vectors:
     pad_sequence(pitches_vector, max_length)
 
+# This part could be use for future work, and it requires further studies.
+# The idea is that there could be a similarity also between songs, and maybe this could be useful information when
+# training a model.
 similarity_matrix = np.zeros((len(pitches_vectors), len(pitches_vectors)))
 for i in range(len(pitches_vectors)):
     for j in range(len(pitches_vectors)):
