@@ -154,7 +154,6 @@ class ConvolutionalVAE(tf.keras.Model):
     def call(self, x):
         mean_x, log_var_x, compressed_shape = self.encode(x)
 
-        # Reparametrization trick
         z = self.sample(mean_x, log_var_x)
         decoded_x = self.decode(z, compressed_shape)
 
@@ -174,6 +173,34 @@ class ConvolutionalVAE(tf.keras.Model):
         return decoded_x
 
     def sample(self, mean, log_var):
+        """
+        REPARAMETRIZATION TRICK
+
+        An important concept related to the theory behind VAEs.
+
+        We could sample directly sample from a normal distribution created by considering the mean and std given by the
+        encoder output:
+
+            z = N(mean, std)
+
+        The problem is that this expression is not deterministic (e.g., we could obtain any real number as a result),
+        and we would not be able to create a backpropagation expression WRT to the mean and the STD, which are
+        parameters that we want to learn.
+
+        But why backpropagation would not work?
+        The sampling operation HAS some parameters (e.g., mean and std), but it cannot be seen as a smooth and continue
+        function, on which gradients could be computed. Rather, it is a function with many discontinuities.
+        Therefore, when computing the gradients WRT to the sampling operation parameters, the gradients would be zero.
+
+        The reparametrization trick overcomes this problem, by means of the following expression:
+
+            z = mean + std ⊙ eps
+
+        where eps is sampled from a normal distribution, it is fixed and it can be treated as an input of the model.
+        Once the eps sampling operation is done, all the parameters are known, and the result of this operation becomes
+        deterministic. This means that we can write a backpropagation expression WRT to mean and std, letting the
+        network learn them.
+        """
         eps = tf.random.normal(shape=tf.shape(mean))
         return eps * tf.exp(log_var * 0.5) + mean
 
@@ -187,9 +214,11 @@ class ConvolutionalVAE(tf.keras.Model):
             z = self.sample(z_mean, z_log_var)
             decoded_x = self.decode(z, compressed_shape)
 
+            # data and decoded_x values are between 0 and 1, therefore we can conveniently use the binary cross entropy
             reconstruction_loss = tf.reduce_mean(
                 tf.reduce_sum(tf.keras.losses.binary_crossentropy(data, decoded_x), axis=(1, 2)))
 
+            # p, q are Normal distributions, then it is possible to write the kl_loss as follows:
             kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var))
             kl_loss = tf.reduce_mean(tf.reduce_sum(kl_loss, axis=1))
 
@@ -269,7 +298,6 @@ class VAENet:
                                  callbacks=callbacks,
                                  verbose=1)
 
-        # TODO: to remove, just for test.
         if self.debug:
             print("DEBUG: Saving image data...")
             self.save_test_images(data)
