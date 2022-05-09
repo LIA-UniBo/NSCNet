@@ -7,7 +7,7 @@ from scipy.stats import ks_2samp, chisquare, zipfian
 import json
 from collections import Counter
 
-'''
+"""
 REFERENCES AND USEFUL LINKS:
 
 Wikipedia:
@@ -22,13 +22,29 @@ Others:
 http://bactra.org/weblog/491.html
 https://stats.stackexchange.com/questions/264431/how-to-determine-if-zipfs-law-can-be-applied
 https://stats.stackexchange.com/questions/6780/how-to-calculate-zipfs-law-coefficient-from-a-set-of-top-frequencies
-'''
+"""
+
 
 class ZipfEstimator:
+    """
+    This class creates all the methods required for evaluating how similar an expected Zipf's  distribution and another
+    distribution are. More detail on this in the project report (see: docs folder).
 
+    NOTE: At the end of this module there is an example on how to use it.
+    """
     def __init__(self, estimation_method="mle", restrict=None):
+        """
+        Initialize the estimator
 
-        if estimation_method not in ["mle","mse"]:
+        Parameters
+        ----------
+        estimation_method: String
+            possible values are mle (Maximum likelihood estimation) and mse (Mean Squared Error)
+        restrict: Double
+            if not None, then it will be used as the maximum frequency value that will be considered during the
+            distribution comparisons.
+        """
+        if estimation_method not in ["mle", "mse"]:
             raise Exception("Estimation method must be one between 'mle' and 'mse'")
 
         self.estimation_method = estimation_method
@@ -50,7 +66,7 @@ class ZipfEstimator:
 
         self.frequencies = np.array(frequencies)
         if self.restrict is not None:
-            self.frequencies = self.frequencies[0:min(len(self.frequencies),self.restrict)]
+            self.frequencies = self.frequencies[0:min(len(self.frequencies), self.restrict)]
         self.distribution = self._frequencies_to_probabilities(frequencies)
 
         objective_function = lambda s: self._mse_estimation(s) if self.estimation_method=="mse" else self._log_likelihood_estimation(s)
@@ -71,7 +87,7 @@ class ZipfEstimator:
 
         adjusted_expected_frequencies = np.copy(self.expected_frequencies)
         freq_diff = np.sum(self.frequencies) - np.sum(self.expected_frequencies)
-        if freq_diff!=0:
+        if freq_diff != 0:
             adjusted_expected_frequencies[0]+=freq_diff
 
         self.chisquare_results = chisquare(self.frequencies, f_exp=adjusted_expected_frequencies)
@@ -82,16 +98,18 @@ class ZipfEstimator:
             raise Exception("Estimator not fitted")
 
         results = {
-        "s": self.s,
-        "ks statistics": self.ks_results[0],
-        "ks p-value": self.ks_results[1],
-        "chisquare statistics": self.chisquare_results[0],
-        "chisquare p-value": self.chisquare_results[1]
+            "s": self.s,
+            "ks statistics": self.ks_results[0],
+            "ks p-value": self.ks_results[1],
+            "chisquare statistics": self.chisquare_results[0],
+            "chisquare p-value": self.chisquare_results[1]
         }
 
         return results
 
     def compare_with_zipf(self, file_path=None):
+
+        fig = plt.figure()
 
         if not self.fitted:
             raise Exception("Estimator not fitted")
@@ -99,7 +117,8 @@ class ZipfEstimator:
         for i, frequency in enumerate(self.frequencies):
             plt.bar(i, frequency, width=.5, color='blue')
 
-        plt.plot(np.arange(len(self.expected_frequencies)), self.expected_frequencies, color="red", label="expected Zipf")
+        plt.plot(
+            np.arange(len(self.expected_frequencies)), self.expected_frequencies, color="red", label="expected Zipf")
 
         plt.xlabel("clusters")
         plt.ylabel("frequencies")
@@ -176,8 +195,9 @@ class ZipfEstimator:
 
         return np.rint(probabilities*total)
 
-#-------------------------------------------------------------------------------
-#Test
+# -------------------------------------------------------------------------------
+# Test
+
 
 def test():
     s, n = 1.25, 100
@@ -191,11 +211,26 @@ def test():
     print(zipf.get_results())
     zipf.compare_with_zipf()
 
-#-------------------------------------------------------------------------------
-#Main
+# -------------------------------------------------------------------------------
+# Main
+
 
 def zipf_estimation(json_path, estimation_method="mle", restrict=None):
+    """
+    Compute the similarity estimation between an exact Zipf distribution, and another one which is extracted from
+    the JSON file passed as parameter.
 
+    Parameters
+    ----------
+    json_path: String
+        The path where the json file is on the file system. This JSON file should contain a "labels" attribute, which
+        basically represents the distribution of the labels after applying a clustering algorithm.
+    estimation_method: String
+        possible values are mle (Maximum likelihood estimation) and mse (Mean Squared Error)
+    restrict: Double
+        if not None, then it will be used as the maximum frequency value that will be considered during the
+        distribution comparisons.
+    """
     #test()
 
     with open(json_path) as json_file:
@@ -214,4 +249,4 @@ def zipf_estimation(json_path, estimation_method="mle", restrict=None):
 
         zipf.compare_with_zipf()
 
-#zipf_estimation("NSCNet_kmeans_K128.json")
+# zipf_estimation("NSCNet_kmeans_K128.json")
