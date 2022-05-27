@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from architectures.basenet.basenet import BaseNet
 from architectures.nscnet.nscnet import NSCNet
 from architectures.vaenet.vaenet import VAENet
+from architectures.vadenet.vadenet import VADENet
 from architectures.common.visualizer import visualize_clusters, visualize_clusters_distribution
 
 
@@ -92,6 +93,37 @@ class NetworkTrainer:
 
         # Save plots
         self._save_kmeans_training_plots(file_path_prefix)
+
+
+    def gaussian_mixture(self, inputs, auto=False):
+
+        # Reset json paths
+        self.saved_json_file_paths.clear()
+
+        method = 'gmm'
+        file_path_prefix = self._create_file_path_prefix(method)
+
+        for K in config.N_POSSIBLE_CLUSTERS:
+            print('*' * 40)
+            print(f'Training started for {self.network_name} - {method}...')
+            print(f'k: {K}')
+            print('*' * 40)
+
+            cluster_dic = {
+                'config': {
+                    "n_clusters": K,
+                    "compute_scores": False,
+                    "auto": auto
+                },
+                "method": method,
+                "name": f"{file_path_prefix}_K{K}"
+            }
+
+            self.train(cluster_dic, inputs)
+            print('Training complete.\n')
+
+        # Save plots
+        self._save_gmm_training_plots(file_path_prefix)
 
     @abc.abstractmethod
     def train(self, **kwargs):
@@ -212,6 +244,71 @@ class NetworkTrainer:
         # self._create_silhouette_samples_plot(cluster_labels,
         #                                      silhouette_sample_scores,
         #                                      dbscan_clusters,
+        #                                      silhouette,
+        #                                      f'{results_dir}_SILHOUETTE_PLOTS.png')
+
+    def _save_gmm_training_plots(self, results_dir):
+        """
+        Create plots according to the gmm clustering results.
+
+        Parameters
+        ----------
+        results_dir: string
+            The path where the results must be saved
+        """
+
+        k = []
+        aic = []
+        bic = []
+        silhouette = []
+        silhouette_sample_scores = []
+        cluster_labels = []
+
+        for file in self.saved_json_file_paths:
+            with open(file, 'r') as f:
+                json_dic = json.load(f)
+                k.append(json_dic['n_clusters'])
+                aic.append(json_dic["aic"])
+                bic.append(json_dic["bic"])
+                silhouette.append(json_dic['silhouette'])
+                silhouette_sample_scores.append(json_dic['silhouette_sample_scores'])
+                cluster_labels.append(json_dic['labels'])
+
+        # Sort by K
+        k, aic, bic, silhouette, silhouette_sample_scores, cluster_labels = zip(
+            *sorted(zip(k, aic, bic, silhouette, silhouette_sample_scores, cluster_labels)))
+
+        # Create the plots
+        fig = plt.figure(figsize=(10, 10))
+
+        ax1 = fig.add_subplot(3, 1, 1)
+        ax1.title.set_text('K - AIC')
+        ax1.plot(k, aic)
+        ax1.set_ylabel('AIC')
+        ax1.set_xlabel('K')
+
+        ax2 = fig.add_subplot(3, 1, 2)
+        ax2.title.set_text('K - BIC')
+        ax2.plot(k, bic)
+        ax2.set_ylabel('BIc')
+        ax2.set_xlabel('K')
+
+        ax3 = fig.add_subplot(3, 1, 3)
+        ax3.title.set_text('K - SILOHUETTE')
+        ax3.plot(k, silhouette)
+        ax3.set_ylabel('SILOHUETTE')
+        ax3.set_xlabel('K')
+
+        # Save to file system
+        file_path = f'{results_dir}_PLOTS.png'
+        plt.savefig(file_path, bbox_inches='tight')
+        plt.close(fig)
+
+        # Currently not used, but could be useful to see the silhouette score for each sample.
+        # (WARNING: the method its not visually optimized when the number of clusters is very high)
+        # self._create_silhouette_samples_plot(cluster_labels,
+        #                                      silhouette_sample_scores,
+        #                                      k,
         #                                      silhouette,
         #                                      f'{results_dir}_SILHOUETTE_PLOTS.png')
 
@@ -359,6 +456,9 @@ class NSCNetTrainer(NetworkTrainer):
     def dbscan(self, inputs):
         print('This architecture does not support the DBSCAN algorithm')
 
+    def gaussian_mixture(self, inputs, auto=False):
+        print('This architecture does not support the Gaussian Mixture Model algorithm')
+
     def _save_training_results(self, cluster_dic, clustering_output, features, nmi_scores):
         super()._save_training_results(cluster_dic, clustering_output, features)
 
@@ -395,10 +495,35 @@ class VAENetTrainer(NetworkTrainer):
                 self.vaenet.train_model(inputs)
 
         if not self.train_only:
+            self.vaenet.cluster_method = cluster_dic['method']
+            self.vaenet.cluster_args = cluster_dic['config']
             self.vaenet.cluster_args['compute_scores'] = True
             clustering_output, features = self.vaenet.compute_clusters(inputs)
 
             self._save_training_results(cluster_dic, clustering_output, features)
+
+class VADENetTrainer(NetworkTrainer):
+    """
+    Class responsible of training the VADENet
+    """
+
+    def __init__(self, result_dir='train/results/VADENet', debug=False):
+        super().__init__('VADENet', result_dir)
+        self.vadenet = None
+        self.debug = debug
+
+    def train(self, cluster_dic, inputs):
+
+        self.vadenet = VADENet(config.INPUT_SHAPE, cluster_dic, self.debug)
+        self.vadenet.train_model(inputs)
+
+        self.vadenet.cluster_args['compute_scores'] = True
+        clustering_output, features = self.vadenet.compute_clusters(inputs)
+
+        self._save_training_results(cluster_dic, clustering_output, features)
+
+    def dbscan(self, inputs):
+        print('This architecture does not support the DBSCAN algorithm')
 
 
 class BASENetTrainer(NetworkTrainer):

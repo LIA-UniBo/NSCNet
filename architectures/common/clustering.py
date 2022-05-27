@@ -3,10 +3,17 @@
 import numpy as np
 from sklearn.cluster import KMeans, OPTICS
 from sklearn.cluster import MiniBatchKMeans
+from sklearn.mixture import GaussianMixture
 from sklearn.metrics import silhouette_score, silhouette_samples
 
-CLUSTERING_METHODS = ["kmeans", "dbscan"]
+CLUSTERING_METHODS = ["kmeans", "dbscan", "gmm"]
 
+def compute_silouhette(x, cluster_predictions):
+
+    silhouette_avg = silhouette_score(x, cluster_predictions)
+    silhouette_sample_scores = silhouette_samples(x, cluster_predictions)
+
+    return silhouette_avg, silhouette_sample_scores
 
 def k_means(x, n_clusters, max_iterations=300, batch_size=None, compute_scores=False, **kwargs):
     """
@@ -47,8 +54,7 @@ def k_means(x, n_clusters, max_iterations=300, batch_size=None, compute_scores=F
 
     # Compute additional metric scores if required
     if compute_scores:
-        silhouette_avg = silhouette_score(x, cluster_predictions)
-        silhouette_sample_scores = silhouette_samples(x, cluster_predictions)
+        silhouette_avg, silhouette_sample_scores = compute_silouhette(x, cluster_predictions)
 
     return {
         "labels": cluster_predictions,
@@ -96,8 +102,7 @@ def dbscan(x, eps, min_samples, metric="euclidean", compute_scores=False, **kwar
     silhouette_sample_scores = None
 
     if compute_scores:
-        silhouette_avg = 0
-        silhouette_sample_scores = np.zeros(len(cluster_predictions))
+        silhouette_avg, silhouette_sample_scores = compute_silouhette(x, cluster_predictions)
 
         if len(np.unique(cluster_predictions)) > 1:
             silhouette_avg = silhouette_score(x, cluster_predictions)
@@ -108,3 +113,40 @@ def dbscan(x, eps, min_samples, metric="euclidean", compute_scores=False, **kwar
         "silhouette": silhouette_avg,
         "silhouette_sample_scores": silhouette_sample_scores
     }
+
+def gaussian_mixture(x, n_clusters, max_iter=300, n_init=3, compute_scores=False, get_params=False, **kwargs):
+
+    gmm = GaussianMixture(n_components=n_clusters,
+                        covariance_type='diag',
+                        max_iter=max_iter,
+                        n_init=n_init,
+                        random_state=0,
+                        verbose=2,
+                        verbose_interval=10)
+
+    # Make predictions and compute the metrics
+    gmm_fitted = gmm.fit(x)
+
+    if not get_params:
+        cluster_predictions = gmm.predict(x)
+
+        silhouette_avg = None
+        silhouette_sample_scores = None
+        aic = None
+        bic = None
+
+        if compute_scores:
+            silhouette_avg, silhouette_sample_scores = compute_silouhette(x, cluster_predictions)
+            aic = gmm_fitted.aic(np.array(x))
+            bic = gmm_fitted.bic(np.array(x))
+
+        return {
+            "labels": cluster_predictions,
+            "silhouette": silhouette_avg,
+            "silhouette_sample_scores": silhouette_sample_scores,
+            "aic": aic,
+            "bic": bic
+        }
+
+    else:
+        return gmm_fitted.weights_, gmm_fitted.means_, gmm_fitted.covariances_

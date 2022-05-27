@@ -38,8 +38,8 @@ class Encoder(tf.keras.Model):
 
         self.dense_layer = layers.Dense(dense_units, activation=activation)
 
-        self.mean_dense_layer = layers.Dense(latent_dim, activation=activation, name="mean")
-        self.std_dense_layer = layers.Dense(latent_dim, activation=activation, name="std")
+        self.mean_dense_layer = layers.Dense(latent_dim, name="mean")
+        self.std_dense_layer = layers.Dense(latent_dim, name="std")
 
     def call(self, x):
         for conv_layer in self.conv_layers:
@@ -215,14 +215,16 @@ class ConvolutionalVAE(tf.keras.Model):
             decoded_x = self.decode(z, compressed_shape)
 
             # data and decoded_x values are between 0 and 1, therefore we can conveniently use the binary cross entropy
-            reconstruction_loss = tf.reduce_mean(
-                tf.reduce_sum(tf.keras.losses.binary_crossentropy(data, decoded_x), axis=(1, 2)))
+            reconstruction_loss = tf.reduce_mean(tf.reduce_sum(tf.keras.losses.binary_crossentropy(data, decoded_x), axis=(1, 2)))
+
+            #reconstruction_loss = tf.keras.losses.MeanSquaredError()(data, decoded_x)
 
             # p, q are Normal distributions, then it is possible to write the kl_loss as follows:
             kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var))
             kl_loss = tf.reduce_mean(tf.reduce_sum(kl_loss, axis=1))
 
-            total_loss = reconstruction_loss + kl_loss
+            #total_loss = reconstruction_loss + kl_loss
+            total_loss = reconstruction_loss
 
         grads = tape.gradient(total_loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
@@ -316,10 +318,8 @@ class VAENet:
 
     def compute_clusters(self, samples):
         features = []
-        n_samples = samples.shape[0]
 
-        for i in range(0, n_samples, config.BATCH_SIZE):
-            batch = samples[i:i + config.BATCH_SIZE]
+        for batch in samples:
             z_mean, z_var, _ = self.model.encode(batch)
             features.extend(self.model.sample(z_mean, z_var))
 
@@ -334,5 +334,7 @@ class VAENet:
             clustering_output = clustering.k_means(features, **self.cluster_args)
         elif self.cluster_method == "dbscan":
             clustering_output = clustering.dbscan(features, **self.cluster_args)
+        elif self.cluster_method == "gmm":
+            clustering_output = clustering.gaussian_mixture(features, **self.cluster_args)
 
         return clustering_output, features

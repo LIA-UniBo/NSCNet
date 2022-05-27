@@ -6,7 +6,7 @@ import numpy as np
 from architectures.common import matrix_manipulation
 
 
-def import_image_tf_dataset(path, batch_size, input_shape, shuffle=True):
+def import_image_tf_dataset(path, batch_size, input_shape, shuffle=True, rgb_normalize=False):
 
     # Load all the images in a path and create a tensor dataset
     dataset = tf.keras.preprocessing.image_dataset_from_directory(
@@ -25,8 +25,10 @@ def import_image_tf_dataset(path, batch_size, input_shape, shuffle=True):
         follow_links=True,
         crop_to_aspect_ratio=False)
 
-    return dataset
+    if rgb_normalize:
+        dataset = dataset.map(lambda x: x/255)
 
+    return dataset
 
 def import_image_np_dataset(path, input_shape, normalize):
 

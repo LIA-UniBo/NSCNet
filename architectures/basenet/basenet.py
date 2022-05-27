@@ -44,5 +44,7 @@ class BaseNet:
             clustering_output = clustering.k_means(features, **self.cluster_args)
         elif self.cluster_method == "dbscan":
             clustering_output = clustering.dbscan(features, **self.cluster_args)
+        elif self.cluster_method == "gmm":
+            clustering_output = clustering.gaussian_mixture(features, **self.cluster_args)
 
         return clustering_output, features

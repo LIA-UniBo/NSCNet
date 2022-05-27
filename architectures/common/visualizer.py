@@ -38,6 +38,7 @@ def visualize_clusters(data, clusters_labels, use_lda=True, file_path=None):
           .format(lost_variance_information))
 
     non_empty_labels = np.unique(clusters_labels)
+    print("K={}".format(len(non_empty_labels)))
 
     color_map = plt.cm.get_cmap("hsv", len(non_empty_labels)+1)
 
@@ -61,14 +62,18 @@ def visualize_clusters_distribution(clusters_labels, file_path=None):
 
     c = Counter(clusters_labels)
 
-    # Create a properly sized figure depending on the number of clusters
-    fig = plt.figure(figsize=(max(len(c) * 0.3, 10), 10))
+    most_common = c.most_common()
+    if len(most_common) > 128:
+        most_common = most_common[0:128]
 
-    for i, value in enumerate(c.most_common()):
+    # Create a properly sized figure depending on the number of clusters
+    fig = plt.figure(figsize=(max(len(most_common) * 0.3, 10), 10))
+
+    for i, value in enumerate(most_common):
         plt.bar(i, value[1], width=.5, color='blue')
 
     # Force xticks to be equal to the labels (avoid decimals)
-    plt.xticks(np.arange(len(c)), [element[0] for element in c.most_common()], rotation='vertical')
+    plt.xticks(np.arange(len(most_common)), [element[0] for element in most_common], rotation='vertical')
     #plt.show(block=True)
 
     if file_path is None:
